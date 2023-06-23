@@ -1,6 +1,6 @@
 Takes specially formatted data from an Arduino's serial output:
 
-***baud rate set to 600 by default, otherwise the program will get overwhelmed***
+***baud rate set to 600 by default, otherwise the python program will get overwhelmed***
 
 .
 
