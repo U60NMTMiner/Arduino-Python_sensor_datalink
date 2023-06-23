@@ -1,7 +1,8 @@
-int stop;
+//future misc. variable setup
+int stop;                                              
 
 //flammable gas sensor setup
-int smk01;
+int smk01;                                             
 int smk02;
 int smk03;
 int smk04;
@@ -11,28 +12,35 @@ int smk07;
 int smk08;
 
 //air sensor setup
-#include <Wire.h>   //I2C library 0x28H 
-byte fetch_pressure(unsigned int *p_Pressure); //convert value to byte data type
+#include <Wire.h>                                      
+byte fetch_pressure(unsigned int *p_Pressure);
 #define TRUE 1
 #define FALSE 0
+byte _status;
+unsigned int P_dat;
+unsigned int T_dat;
+double PR;
+double TR;
+double V;
+double VV;
+double Vcor;
 
 int air00;
 
 
 void setup() {
   Serial.begin(600);
-  pinMode(53, INPUT_PULLUP);  //pin for dump data
-
+  pinMode(53, INPUT_PULLUP);                           //pin for button to signal data collection finished
 
 //airflow sensor setup
   Wire.begin();
   delay(500);
 
 //fancy lights
-  pinMode(22, OUTPUT); //green
-  pinMode(24, OUTPUT); //yellow
-  pinMode(26, OUTPUT); //red
-  digitalWrite(22, HIGH);
+  pinMode(22, OUTPUT); //green led
+  pinMode(24, OUTPUT); //yellow led
+  pinMode(26, OUTPUT); //red led
+  digitalWrite(22, HIGH);                            //startup test to make sure no LEDs are burned out
   delay(100);
   digitalWrite(24, HIGH);
   delay(100);
@@ -42,28 +50,18 @@ void setup() {
   digitalWrite(24, LOW);
   digitalWrite(26, LOW);
   delay(100);
-  digitalWrite(22, HIGH);
+  digitalWrite(22, HIGH);                            //make sure the green LED stays on
+
 
 //Serial calibration stuff, to tell the python code how many sensors are being used
-  Serial.println("A01 S01 S02");  //add the names of all active sensors here
-                                  //a sensor is "active" if it is sending data over serial
+  Serial.println("A01 S01 S02");///////////////////////MANUALLY add the names of all active sensors here!!!!!///////////////////////////
+//                                                   //a sensor is "active" if it is sending data over serial
 
 }
 
 void loop() {
-
-
-
 //airflow/pressure sensors
-  byte _status;
-  unsigned int P_dat;
-  unsigned int T_dat;
-  double PR;
-  double TR;
-  double V;
-  double VV;
-  double Vcor;
-  while (1){
+  while (1){                                         //built-in error diagnosis from airflow sensors
     _status = fetch_pressure(&P_dat, &T_dat);
     switch (_status){
       case 0: //Serial.println("Ok ");
@@ -72,10 +70,11 @@ void loop() {
         break;
       case 2: //Serial.println("Slate");
         break;
-      default: Serial.println("Error"); digitalWrite(22, LOW); digitalWrite(26, HIGH);
+      default: /*Serial.println("Error");*/ digitalWrite(22, LOW); digitalWrite(26, HIGH);
         break;
     }
-    PR = (double)((P_dat-819.15)/(14744.7)) ;
+
+    PR = (double)((P_dat-819.15)/(14744.7)) ;        //math to calibrate airflow sensor data
     PR = (PR - 0.49060678) ;
     PR = abs(PR);
      V = ((PR*13789.5144)/1.225);
@@ -85,16 +84,13 @@ void loop() {
     TR = TR-50;
     
   
-  //Serial outputs (to Python program)
+//Serial outputs (to Python program)
 
   //Airflow sensors
     //Serial.print("pressure psi:"); Serial.println(PR,10);
     Serial.print("A01"); Serial.print(abs(Vcor)); Serial.print(",");
 
-  //Pressure sensors
-
   //Smoke sensors
-//smoke sensors
   smk01 = analogRead(A0);
   smk02 = analogRead(A1);
   smk03 = analogRead(A2);
@@ -102,17 +98,16 @@ void loop() {
   smk05 = analogRead(A4);
   smk06 = analogRead(A5);
 
-    Serial.print("S01"); Serial.print(smk01); Serial.print(",");
-    Serial.print("S02"); Serial.print(smk02); Serial.print(",");
-    ///*Serial.print("S03");*/ Serial.print(smk02); Serial.print(",");    //serial data output format:
-    ///*Serial.print("S04");*/ Serial.print(smk03); Serial.print(",");    //___|_____________
-    ///*Serial.print("S05");*/ Serial.print(smk04); Serial.print(",");    //first 3 digits: sensor ID
-    ///*Serial.print("S06");*/ Serial.print(smk05); Serial.print(",");    //everything else: data
+  Serial.print("S01"); Serial.print(smk01); Serial.print(",");
+  Serial.print("S02"); Serial.print(smk02); Serial.print(",");
+  ///*Serial.print("S03");*/ Serial.print(smk02); Serial.print(",");    //serial data output format:
+  ///*Serial.print("S04");*/ Serial.print(smk03); Serial.print(",");    //___|_____________
+  ///*Serial.print("S05");*/ Serial.print(smk04); Serial.print(",");    //first 3 digits: sensor ID
+  ///*Serial.print("S06");*/ Serial.print(smk05); Serial.print(",");    //everything else: data, no separating characters anywhere
 
 //that one analog airflow sensor
-  //air00 = analogRead(A8);
-
-    //Serial.print("A00*"); Serial.println(air00);
+  //air00 = analogRead(A8);                                             //optional analog airflow sensor that I found
+  //Serial.print("A00"); Serial.println(air00); Serial.print(",");
 
 
 //end the serial line to prepare for the next set of data
@@ -124,9 +119,9 @@ void loop() {
       //Serial.println("button press");
       Serial.println("!");
       digitalWrite(22, LOW);
-      while (true){   //lock the Arduino into an infinite loop until reset
+      while (true){                                                     //lock the Arduino into an infinite loop until reset
       stop = digitalRead(53);
-        if(stop == LOW){     //flashing Y + R, depress killspwitch
+        if(stop == LOW){                                                //flashing Y + R LEDs, reminder to depress killswitch to proceed
         delay(500);
         digitalWrite(24, HIGH);
         digitalWrite(26, LOW);
@@ -134,7 +129,7 @@ void loop() {
         digitalWrite(24, LOW);
         digitalWrite(26, HIGH);
         }
-        if(stop != LOW){    //flashing Y, ready to reset
+        if(stop != LOW){                                                //flashing Y, ready for user to press reset button
           delay(250);
           digitalWrite(24, HIGH);
           digitalWrite(26, LOW);
@@ -148,7 +143,7 @@ void loop() {
 }
 
 
-//stuff for reading the differential pressure sensor aka airspeed sensor
+//getting the data from the airspeed sensor off of the I2C data bus
 byte fetch_pressure(unsigned int *p_P_dat, unsigned int *p_T_dat){
   byte address, Press_H, Press_L, _status;
   unsigned int P_dat;
