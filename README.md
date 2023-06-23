@@ -20,3 +20,6 @@ Takes specially formatted data from an Arduino's serial output:
 Takes the data and uses a pandas dataframe to store it, then when it recieves the "!", it converts the
 dataframe into a .csv ("comma separated value") file that can be optionally imported into Google Sheets
 or Microsoft Excel to further analyze the data.
+
+
+The .csv files included here contain example data from an airspeed sensor and two MQ-2 gas smoke/flammable gas sensors.
