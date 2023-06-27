@@ -50,5 +50,5 @@ while True:                                    # Main program loop
         plt.title("Sensor Datafeed [2sec delay]")   # Give the user more context
         if n == 0:                                  # Only add one legend, not a new one for each loop
             plt.legend(loc="upper left")
-        plt.pause(0.00001)                          # Mandatory pause command
+        plt.pause(0.0001)                          # Mandatory pause command
         n += 1                                      # Move master index forward
