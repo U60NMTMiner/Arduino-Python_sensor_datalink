@@ -3,9 +3,11 @@ import pandas as pd
 import datetime
 import matplotlib.pyplot as plt      # Importing Libraries
 import sys
+from pyexcel.cookbook import merge_all_to_a_book
+import glob
 
 now = datetime.datetime.now()        # Setting up datetime to create unique file name for each test
-filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.csv"
+filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
 ser = serial.Serial('COM10', 600)    # Setup for reading the serial communication
 
@@ -22,13 +24,15 @@ data_df = pd.DataFrame(columns=[prelim])  # Start up the dataframes
 row_data = [0] * len(prelim)
 new_df = pd.DataFrame([row_data], columns=[prelim])
 combined_df = pd.DataFrame(columns=[prelim])
+#combined_df = combined_df.append()
 data_df.loc[0] = [0] * len(prelim)
 
 while True:                                    # Main program loop
     data = ser.readline().decode().strip()     # Continuously pull data from the serial stream
     if data:                                   # Make sure there is something to read
         if "!" in data:                        # Listen for the exit condition from the Arduino
-            combined_df.to_excel(filename, index=False, startrow=0, startcol=0)  # If the condition is met, save the data...
+            combined_df.to_excel(filename, sheet_name='Sheet2', index=True, header=True, startrow=1, index_label='Timestamp', startcol=1)  # If the condition is met, save the data...
+            merge_all_to_a_book(glob.glob("csvdirectory//*.csv"), "output.xlsx")
             print()
             print("Success!")
             print("Data exported as file: " + filename)
@@ -37,7 +41,7 @@ while True:                                    # Main program loop
         data = data.split(',')                 # Separate the sensors' data
         del data[-1]                           # Account for the extra comma at the end
 
-        row_data = [float(item[3:]) for item in data]    #put the data into a list
+        row_data = [float(item[3:]) for item in data]    #put the data into a list, everything from the 8th character on
         combined_df = pd.concat([combined_df, pd.DataFrame([row_data], columns=[prelim])], ignore_index=True)
 
         plt.figure(1)                          # Set up the data plot
