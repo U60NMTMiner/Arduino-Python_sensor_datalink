@@ -1,5 +1,5 @@
 Update: there are now two versions of the python arduino_serial_reader program and the Arduino program.
- Use the "V2" Arduino program with the ..._to_excel python program.
+ Use the "V2..." Arduino program with the ..._to_excel python program.
 
 
 Takes specially formatted data from an Arduino's serial output:
