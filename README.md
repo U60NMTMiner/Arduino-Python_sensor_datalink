@@ -22,4 +22,5 @@ dataframe into a .csv ("comma separated value") file that can be optionally impo
 or Microsoft Excel to further analyze the data.
 
 
-The .csv files included here contain example data from an airspeed sensor and two MQ-2 gas smoke/flammable gas sensors.
+The .csv files included here contain example data from an airspeed sensor and two MQ-2 gas smoke/flammable
+gas sensors that you would see as the output of the first python program given the arduino program as input.
