@@ -3,6 +3,7 @@ import pandas as pd
 import datetime
 import matplotlib.pyplot as plt      # Importing Libraries
 import sys
+import os
 import openpyxl as xl
 
 now = datetime.datetime.now()        # Setting up datetime to create unique file name for each test
@@ -17,40 +18,65 @@ for i in range(senslen):                  # Pull out the sensor IDs from the lis
     exec(f"{prelim[i]} = {0}")
 del i                                     # Clean up unneeded variable
 
-n = 0                                     # Start master index at zero
-
-data_df = pd.DataFrame(columns=[prelim])  # Start up the dataframes
-row_data = [0] * len(prelim)
-new_df = pd.DataFrame([row_data], columns=[prelim])
-combined_df = pd.DataFrame(columns=[prelim])
-data_df.loc[0] = [0] * len(prelim)
-empty_df = data_df
-
 sensloc = ser.readline().decode().strip()  # Read just the second line of serial for sensor locations
 sensloc = sensloc.split(' ')
 
+n = 0                                     # Start master index at zero
 
-def format_file():                                               #modify the output .xlsx file to work with Mine_Evacuation.py
-    source_workbook = xl.load_workbook("M_E_DataTemplate.xlsx")  #pull in the template
-    dupe_workbook = xl.Workbook()                                 #create new spreadsheet to preserve original
+data_df = pd.DataFrame(columns=[prelim])                          # Start up dataframe
+data_df.loc[0] = [0] * len(prelim)                                # Temporarily fill with zeros
+row_data = [0] * len(prelim)                                      # Create list to contain each second's data
+combined_df = pd.DataFrame(columns=[prelim])                      # Start up master dataframe to hold all data
+empty_df = data_df                                                # Dataframe of just zeros
+
+
+def format_file():                                                # Modify the output .xlsx file to work with Mine_Evacuation.py
+
+    data_workbook = xl.load_workbook(filename)
+    wsedit = data_workbook['Sheet2']
+    for q, value in enumerate(sensloc):
+        cell = wsedit.cell(row=3, column=3 + q)
+        cell.value = value
+    del q
+
+    data_workbook.save(filename + "mod.xlsx")
+    os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename)  #clean up unneeded file
+
+    source_workbook = xl.load_workbook("M_E_DataTemplate.xlsx")   # Pull in the template
+    dupe_workbook = xl.Workbook()                                 # Create new spreadsheet to preserve original
     for sheet_name in source_workbook.sheetnames:
         source_sheet = source_workbook[sheet_name]                # Get the source sheet
         new_sheet = dupe_workbook.create_sheet(title=sheet_name)  # Create a new sheet in the new workbook
         for row in source_sheet.iter_rows(values_only=True):      # Copy the values from the source sheet to the new sheet
             new_sheet.append(row)
-    s0 = dupe_workbook.get_sheet_by_name('Sheet')
-    dupe_workbook.remove_sheet(s0)                                # Get rid of copy operation artefact
-    dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook
+        del row
+    del sheet_name
+    del dupe_workbook['Sheet']                                    # Get rid of copy operation artefact
     source_workbook.close()                                       # Close the original to prevent accidental overwrites
 
-    #wb = xl.load_workbook(filename)
-    #ws = wb.active
-    #ws.print(['A1'].1)
-    #wb.save(now.strftime("%Y-%m-%d_%H-%M") + "_data_out.xlsx")
+    datalen = len(combined_df.columns)
+    ws2edit = dupe_workbook['Sheet2']
+    ws2edit.delete_rows(5, 13)                                    # Clear out the example data
+    for row in range(5, 5 + datalen):
+        for column in range(2, 199 + 1):
+            cell = ws2edit.cell(row=row, column=column)
+            cell.value = 0                                        # Put in zeros to fill any would-be empty cells
+    for w in range(datalen):
+        ws2edit.cell(row=w + 5, column=1).value = w               # Copy the new index
+    del w
+    '''
+    #read_row = []
+    for column in range(35, 67):
+        cell = ws2edit[chr(column) + str(3)]
+        if cell.value is not None:
+            row_data.append(int(cell.value))
+    for item in read_row:
+        if any(item in sensloc for item in read_row):'''
+
+    dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook
 
     dupe_workbook.close()
-    #wb.close()
-    pass
+    return
 
 
 while True:                                    # Main program loop
@@ -66,8 +92,8 @@ while True:                                    # Main program loop
             format_file()
             print()
             print("Success!")
-            print("Data exported as file: " + filename)  #Then export the file
-            sys.exit(0)                                # Then shut down this program
+            print("Data exported as file: " + filename)  # Then export the file
+            sys.exit(0)                                  # Then shut down this program
 
         data = data.split(',')                 # Separate the sensors' data
         del data[-1]                           # Account for the extra comma at the end
@@ -78,7 +104,7 @@ while True:                                    # Main program loop
         plt.figure(1)                          # Set up the data plot
         plt.ion()                              # Enable interactive graph (plot will automatically redraw)
         plt.ylim([-5, 900])                    # Set y-axis bounds
-        plt.xlim([n - 500, n + 5])            # Set scrolling x-axis bounds
+        plt.xlim([n - 500, n + 5])             # Set scrolling x-axis bounds
         plt.plot(combined_df['S01'].iloc[-500:], 'r-', label="Gas Sensor 1")
         plt.plot(combined_df['S02'].iloc[-500:], 'b-', label="Gas Sensor 2")  # Set gas sensor data colors, and
         plt.plot(combined_df['A01'].iloc[-500:]*10, 'g-', label="Airspeed Sensor 1")  # Plot the last 1000 datapoints of each
