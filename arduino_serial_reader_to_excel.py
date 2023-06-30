@@ -9,7 +9,7 @@ import openpyxl as xl
 now = datetime.datetime.now()        # Setting up datetime to create unique file name for each test
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
-ser = serial.Serial('COM10', 600)    # Setup for reading the serial communication
+ser = serial.Serial('COM10', 9600)    # Setup for reading the serial communication
 
 prelim = ser.readline().decode().strip()  # Read just the first line of serial for sensor names
 prelim = prelim.split(' ')                # Put the sensor ID's sent by the Arduino into a list
@@ -31,51 +31,63 @@ empty_df = data_df                                                # Dataframe of
 
 
 def format_file():                                                # Modify the output .xlsx file to work with Mine_Evacuation.py
-
-    data_workbook = xl.load_workbook(filename)
+    data_workbook = xl.load_workbook(filename)                    # Load the raw data file
     wsedit = data_workbook['Sheet2']
     for q, value in enumerate(sensloc):
-        cell = wsedit.cell(row=3, column=3 + q)
+        cell = wsedit.cell(row=3, column=3 + q)                   # Assign node location to each sensor
         cell.value = value
     del q
 
-    data_workbook.save(filename + "mod.xlsx")
-    os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename)  #clean up unneeded file
+    data_workbook.save(filename + "mod.xlsx")                     # Save new file
+    os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename)  #clean up old file
 
-    source_workbook = xl.load_workbook("M_E_DataTemplate.xlsx")   # Pull in the template
+    source_workbook = xl.load_workbook("M_E_DataTemplate.xlsx")   # Load the template data file
     dupe_workbook = xl.Workbook()                                 # Create new spreadsheet to preserve original
-    for sheet_name in source_workbook.sheetnames:
-        source_sheet = source_workbook[sheet_name]                # Get the source sheet
-        new_sheet = dupe_workbook.create_sheet(title=sheet_name)  # Create a new sheet in the new workbook
-        for row in source_sheet.iter_rows(values_only=True):      # Copy the values from the source sheet to the new sheet
+    for sheet_name in source_workbook.sheetnames:                 # For each sheet in the template...
+        source_sheet = source_workbook[sheet_name]                # Get the source sheet...
+        new_sheet = dupe_workbook.create_sheet(title=sheet_name)  # Create a new sheet in the new workbook...
+        for row in source_sheet.iter_rows(values_only=True):      # And copy the values from the source sheet to the new sheet
             new_sheet.append(row)
         del row
     del sheet_name
     del dupe_workbook['Sheet']                                    # Get rid of copy operation artefact
-    source_workbook.close()                                       # Close the original to prevent accidental overwrites
+    source_workbook.close()                                       # Close the original without saving to prevent accidental overwrites
 
-    datalen = len(combined_df.columns)
-    ws2edit = dupe_workbook['Sheet2']
+    datalen = len(combined_df.columns)                            # Determine how much data was collected
+    ws2edit = dupe_workbook['Sheet2']                             # Prepare the new workbook to make edits
     ws2edit.delete_rows(5, 13)                                    # Clear out the example data
     for row in range(5, 5 + datalen):
         for column in range(2, 199 + 1):
             cell = ws2edit.cell(row=row, column=column)
             cell.value = 0                                        # Put in zeros to fill any would-be empty cells
     for w in range(datalen):
-        ws2edit.cell(row=w + 5, column=1).value = w               # Copy the new index
+        ws2edit.cell(row=w + 5, column=1).value = w               # Put in the new index
     del w
+    del column
+    del row
+    # Based on the sensors' node locations, copy data into the new workbook
+
     '''
-    #read_row = []
-    for column in range(35, 67):
-        cell = ws2edit[chr(column) + str(3)]
-        if cell.value is not None:
-            row_data.append(int(cell.value))
-    for item in read_row:
-        if any(item in sensloc for item in read_row):'''
+    iterate over columns of dupe_ws
+        get Nth sensor location
+        check for matching value
+            record location of target
+                copy data column to below target
+    '''
+
+    # Start with gas sensors
+    matching_sensors = []
+    for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):
+        active_cell = ws2edit.cell(row=3, column=col[0].col_idx).value
+        if active_cell != "Fire":
+            dostuff=1
+        if active_cell in sensloc:
+            matching_sensors.append(active_cell)
 
     dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook
 
-    dupe_workbook.close()
+    dupe_workbook.close()                                         # Close all workbooks
+    data_workbook.close()
     return
 
 
@@ -88,11 +100,11 @@ while True:                                    # Main program loop
                 combined_df.to_excel(writer, sheet_name='Sheet2', index=True, header=True, startrow=1, index_label='Timestamp', startcol=1)  # If the condition is met, save the data...
                 empty_df.to_excel(writer, sheet_name='Sheet3', index=False, header=False)
                 empty_df.to_excel(writer, sheet_name='Sheet4', index=False, header=False)
-                print("Data exported as file: " + filename)
+                print("New spreadsheet generating...")
             format_file()
             print()
             print("Success!")
-            print("Data exported as file: " + filename)  # Then export the file
+            print("Formatted data exported as file: " + filename + "mod.xlsx")  # Then export the file
             sys.exit(0)                                  # Then shut down this program
 
         data = data.split(',')                 # Separate the sensors' data
