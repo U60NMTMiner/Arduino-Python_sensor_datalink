@@ -61,7 +61,7 @@ def format_file():                                                # Modify the o
     datalen = len(combined_df.index)                            # Determine how much data was collected
     ws2edit = dupe_workbook['Sheet2']                             # Prepare the new workbook to make edits
     ws2edit.delete_rows(5, 13)                                    # Clear out the example data
-    for row in range(5, 1 + datalen):
+    for row in range(5, 1 + 4 + datalen):
         for column in range(2, 199 + 1):
             cell = ws2edit.cell(row=row, column=column)
             cell.value = 0                                        # Put in zeros to fill any would-be empty cells
@@ -91,7 +91,7 @@ def format_file():                                                # Modify the o
             search_cell = ws2edit.cell(row=3, column=col[0].col_idx).value    # Where the program is currently looking
             if str(search_cell) == ref_cell and search_cell != "Fire":        # If it finds something...
                 print("Matching sensor found at node " + str(search_cell))  #eventually, this needs to copy the data from wsedit to ws2edit
-                for row in wsedit.iter_rows(min_row=5, max_row=datalen, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
+                for row in wsedit.iter_rows(min_row=5, max_row=datalen + 4, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
                     #print("copying data...")                     # And copy it over
                     ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, sensrows[o]).value
 
