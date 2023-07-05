@@ -10,6 +10,9 @@ now = datetime.datetime.now()        # Setting up datetime to create unique file
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
 ser = serial.Serial('COM10', 9600)    # Setup for reading the serial communication
+print("Serial port opened")
+print("For best results, please allow smoke sensors to warm to operating temperature for 5 minutes before use!")
+print()
 
 prelim = ser.readline().decode().strip()  # Read just the first line of serial for sensor names
 prelim = prelim.split(' ')                # Put the sensor ID's sent by the Arduino into a list
@@ -17,9 +20,11 @@ senslen = len(prelim)                     # Figure out the number of active sens
 for i in range(senslen):                  # Pull out the sensor IDs from the list
     exec(f"{prelim[i]} = {0}")
 del i                                     # Clean up unneeded variable
+print("Sensor names imported")
 
 sensloc = ser.readline().decode().strip()  # Read just the second line of serial for sensor locations
 sensloc = sensloc.split(' ')
+print("Sensor locations imported")
 
 n = 0                                     # Start master index at zero
 
@@ -53,10 +58,10 @@ def format_file():                                                # Modify the o
     del dupe_workbook['Sheet']                                    # Get rid of copy operation artefact
     source_workbook.close()                                       # Close the original without saving to prevent accidental overwrites
 
-    datalen = len(combined_df.columns)                            # Determine how much data was collected
+    datalen = len(combined_df.index)                            # Determine how much data was collected
     ws2edit = dupe_workbook['Sheet2']                             # Prepare the new workbook to make edits
     ws2edit.delete_rows(5, 13)                                    # Clear out the example data
-    for row in range(5, 5 + datalen):
+    for row in range(5, 1 + datalen):
         for column in range(2, 199 + 1):
             cell = ws2edit.cell(row=row, column=column)
             cell.value = 0                                        # Put in zeros to fill any would-be empty cells
@@ -68,21 +73,43 @@ def format_file():                                                # Modify the o
     # Based on the sensors' node locations, copy data into the new workbook
 
     '''
-    iterate over columns of dupe_ws
-        get Nth sensor location
-        check for matching value
-            record location of target
-                copy data column to below target
+    pull up the first sensor's location (iterative over sensloc, iterates senslen times)
+    [for item in sensloc:]
+        find the matching location in ws2edit (iterative over col 167 to 199+1)
+        [for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):]
+            copy data over (also iterative, over datalen)
+            [for row in range(4, datalen + 1):]
+        
     '''
 
     # Start with gas sensors
-    matching_sensors = []
-    for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):
-        active_cell = ws2edit.cell(row=3, column=col[0].col_idx).value
-        if active_cell != "Fire":
-            dostuff=1
-        if active_cell in sensloc:
-            matching_sensors.append(active_cell)
+    sensrows = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]  # [Temporary] manually telling the program which columns in the data spreadsheet to read
+    o = 0
+    for item in sensloc:
+        ref_cell = str(item)        # Sensor location we are looking for
+        for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):
+            search_cell = ws2edit.cell(row=3, column=col[0].col_idx).value    # Where the program is currently looking
+            if str(search_cell) == ref_cell and search_cell != "Fire":        # If it finds something...
+                print("Matching sensor found at node " + str(search_cell))  #eventually, this needs to copy the data from wsedit to ws2edit
+                for row in wsedit.iter_rows(min_row=5, max_row=datalen, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
+                    #print("copying data...")                     # And copy it over
+                    ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, sensrows[o]).value
+
+                    #copy target = "ref_cell" in wsedit
+                    #paste target = "search_cell" in ws2edit
+                    '''
+                    for row in worksheet.iter_rows(min_row=start_row, max_row=end_row, min_col=ord(start_column) - 64, max_col=ord(end_column) - 64):
+                        for cell in row:
+                            value = cell.value
+                            print(value)
+                    '''
+                if o < 15:
+                    o += 1
+            elif str(search_cell) == "Fire":                                # Or if it is a "Fire" column, do something different
+                fire = "ohno"  #eventually, I need to get some values for a simulated fire
+    del col
+    del row
+    del o
 
     dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook
 
@@ -97,10 +124,11 @@ while True:                                    # Main program loop
         if "!" in data:                        # Listen for the exit condition from the Arduino
             with pd.ExcelWriter(filename) as writer:
                 empty_df.to_excel(writer, sheet_name='Sheet1', index=False, header=False)
-                combined_df.to_excel(writer, sheet_name='Sheet2', index=True, header=True, startrow=1, index_label='Timestamp', startcol=1)  # If the condition is met, save the data...
+                combined_df.to_excel(writer, sheet_name='Sheet2', index=True, header=True, startrow=2, index_label='Timestamp', startcol=1)  # If the condition is met, save the data...
                 empty_df.to_excel(writer, sheet_name='Sheet3', index=False, header=False)
                 empty_df.to_excel(writer, sheet_name='Sheet4', index=False, header=False)
                 print("New spreadsheet generating...")
+                print()
             format_file()
             print()
             print("Success!")
