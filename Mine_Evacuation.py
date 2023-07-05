@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 INF = maxsize // 2 - 1
 
 
+#addres_excell="C:\\Users\\Sean\\Desktop\\New code\\NEW_SENSOR2_DATA (32 Sensors) (2).xlsx"  # Put the spreadsheet's filepath here
+addres_excell="C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\duplicate.xlsx"
+img = mpimg.imread('C:\\Users\\Sean\\Desktop\\New code\\CO concentration Model_3.png')      # Put the reference image filepath here
+
 class Graph:
 
     def __init__(self, graph):
@@ -108,7 +112,6 @@ nodes_with_high_capacity=28
 DontuseDecapacitor=False#if you want to only use FFA with conctant capacity of 5
 #Concentration of CO data
 import pandas as pd
-addres_excell="C:\\Users\\Sean\\Desktop\\New code\\NEW_SENSOR2_DATA (32 Sensors) (2).xlsx"
 df=pd.read_excel(addres_excell,sheet_name = 'Sheet1',engine='openpyxl')
 sensorData=pd.read_excel(addres_excell,sheet_name = 'Sheet2',engine='openpyxl')
 velocity=1 #m/s
@@ -379,7 +382,6 @@ B=(sensorSXY[:,1]+sensorSXY[:,3])/2
 A=sensorDATAXY.values[:,0]
 B=sensorDATAXY.values[:,1]
 #fig=plt.figure()
-img = mpimg.imread('C:\\Users\\Sean\\Desktop\\New code\\CO concentration Model_3.png')
 # Output Images
 ximg=np.linspace(-45190.00,-45400.00,np.shape(img)[0])
 yimg=np.linspace(-3006075.00,	-3005450.00,np.shape(img)[1])
