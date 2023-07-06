@@ -11,7 +11,7 @@ filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
 ser = serial.Serial('COM10', 9600)    # Setup for reading the serial communication
 print("Serial port opened")
-print("For best results, please allow smoke sensors to warm to operating temperature for 5 minutes before use!")
+print("For best results, please allow smoke sensors to warm to operating temperature for 30 minutes before use!")
 print()
 
 prelim = ser.readline().decode().strip()  # Read just the first line of serial for sensor names
@@ -39,7 +39,7 @@ def format_file():                                                # Modify the o
     data_workbook = xl.load_workbook(filename)                    # Load the raw data file
     wsedit = data_workbook['Sheet2']
     for q, value in enumerate(sensloc):
-        cell = wsedit.cell(row=3, column=3 + q)                   # Assign node location to each sensor
+        cell = wsedit.cell(row=4, column=3 + q)                   # Assign node location to each sensor
         cell.value = value
     del q
 
@@ -58,7 +58,7 @@ def format_file():                                                # Modify the o
     del dupe_workbook['Sheet']                                    # Get rid of copy operation artefact
     source_workbook.close()                                       # Close the original without saving to prevent accidental overwrites
 
-    datalen = len(combined_df.index)                            # Determine how much data was collected
+    datalen = len(combined_df.index)                              # Determine how much data was collected
     ws2edit = dupe_workbook['Sheet2']                             # Prepare the new workbook to make edits
     ws2edit.delete_rows(5, 13)                                    # Clear out the example data
     for row in range(5, 1 + 4 + datalen):
@@ -70,46 +70,42 @@ def format_file():                                                # Modify the o
     del w
     del column
     del row
+
     # Based on the sensors' node locations, copy data into the new workbook
 
-    '''
-    pull up the first sensor's location (iterative over sensloc, iterates senslen times)
-    [for item in sensloc:]
-        find the matching location in ws2edit (iterative over col 167 to 199+1)
-        [for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):]
-            copy data over (also iterative, over datalen)
-            [for row in range(4, datalen + 1):]
-        
-    '''
-
     # Start with gas sensors
-    sensrows = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]  # [Temporary] manually telling the program which columns in the data spreadsheet to read
+    gas_cols = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]  # Telling the program which columns in the data spreadsheet to read for the gas sensors
     o = 0
-    for item in sensloc:
+    for item in sensloc[:16]:       # We know that only the first 16 sensors are gas sensors
         ref_cell = str(item)        # Sensor location we are looking for
         for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):
             search_cell = ws2edit.cell(row=3, column=col[0].col_idx).value    # Where the program is currently looking
             if str(search_cell) == ref_cell and search_cell != "Fire":        # If it finds something...
                 print("Matching sensor found at node " + str(search_cell))  #eventually, this needs to copy the data from wsedit to ws2edit
                 for row in wsedit.iter_rows(min_row=5, max_row=datalen + 4, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
-                    #print("copying data...")                     # And copy it over
-                    ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, sensrows[o]).value
-
-                    #copy target = "ref_cell" in wsedit
-                    #paste target = "search_cell" in ws2edit
-                    '''
-                    for row in worksheet.iter_rows(min_row=start_row, max_row=end_row, min_col=ord(start_column) - 64, max_col=ord(end_column) - 64):
-                        for cell in row:
-                            value = cell.value
-                            print(value)
-                    '''
-                if o < 15:
-                    o += 1
+                    ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, gas_cols[o]).value  # And copy it over
+                o += 1
             elif str(search_cell) == "Fire":                                # Or if it is a "Fire" column, do something different
                 fire = "ohno"  #eventually, I need to get some values for a simulated fire
-    del col
-    del row
     del o
+
+    # Next airspeed sensors
+    #airspeed_cols = [19, 20, 21, 22, 23, 24, 25, 26]  # Telling the program which columns in the data spreadsheet to read for the gas sensors
+    airspeed_cols = [19]  # Until the TCA9548A multiplexers get here, only one sensor allowed on the I2C bus :(
+    p = 0
+    #for item in sensloc[16:23]:  #Until the multiplexers get here, just one sensor
+    for item in sensloc[17-1]:
+        ref_cell = str(item)        # Sensor location we are looking for
+        for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=35, max_col=66 + 1):
+            search_cell = ws2edit.cell(row=3, column=col[0].col_idx).value                  # Reading all the sensor numbers
+            if str(search_cell) == ref_cell and search_cell != "Fire":                      # If it finds a match...
+                print("Matching sensor found at node " + str(search_cell))                  #
+                for row in wsedit.iter_rows(min_row=5, max_row=datalen + 4, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
+                    ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, airspeed_cols[p]).value          # And copy it over
+                p += 1
+            elif str(search_cell) == "Fire":                                                 # Or if it is a "Fire" column, do something different
+                fire = "ohno"  #eventually, I need to get some values for a simulated fire
+    del p
 
     dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook
 
