@@ -44,7 +44,7 @@ def format_file():                                                # Modify the o
     del q
 
     data_workbook.save(filename + "mod.xlsx")                     # Save new file
-    os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename)  #clean up old file
+    os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename)  #clean up preliminary file
 
     source_workbook = xl.load_workbook("M_E_DataTemplate.xlsx")   # Load the template data file
     dupe_workbook = xl.Workbook()                                 # Create new spreadsheet to preserve original
@@ -76,7 +76,7 @@ def format_file():                                                # Modify the o
     # Start with gas sensors
     gas_cols = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]  # Telling the program which columns in the data spreadsheet to read for the gas sensors
     o = 0
-    for item in sensloc[:16]:       # We know that only the first 16 sensors are gas sensors
+    for item in sensloc[:16]:       # We know that only the first 16 sensors are gas sensors (only 16 analog ports on the Arduino Mega)
         ref_cell = str(item)        # Sensor location we are looking for
         for col in ws2edit.iter_cols(min_row=3, max_row=3, min_col=167, max_col=199 + 1):
             search_cell = ws2edit.cell(row=3, column=col[0].col_idx).value    # Where the program is currently looking
@@ -85,8 +85,6 @@ def format_file():                                                # Modify the o
                 for row in wsedit.iter_rows(min_row=5, max_row=datalen + 4, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
                     ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, gas_cols[o]).value  # And copy it over
                 o += 1
-            elif str(search_cell) == "Fire":                                # Or if it is a "Fire" column, do something different
-                fire = "ohno"  #eventually, I need to get some values for a simulated fire
     del o
 
     # Next airspeed sensors
@@ -103,14 +101,12 @@ def format_file():                                                # Modify the o
                 for row in wsedit.iter_rows(min_row=5, max_row=datalen + 4, min_col=col[0].col_idx, max_col=col[0].col_idx):  # Look at all the data belonging to the sensor
                     ws2edit.cell(row[0].row, col[0].col_idx).value = wsedit.cell(row[0].row, airspeed_cols[p]).value          # And copy it over
                 p += 1
-            elif str(search_cell) == "Fire":                                                 # Or if it is a "Fire" column, do something different
-                fire = "ohno"  #eventually, I need to get some values for a simulated fire
     del p
 
-    dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook
-
+    dupe_workbook.save("duplicate.xlsx")                          # Save the new workbook (Will overwrite itself each time the program is run)
     dupe_workbook.close()                                         # Close all workbooks
     data_workbook.close()
+    os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename + "mod.xlsx")  #clean up previous stage's file
     return
 
 
@@ -139,13 +135,14 @@ while True:                                    # Main program loop
 
         plt.figure(1)                          # Set up the data plot
         plt.ion()                              # Enable interactive graph (plot will automatically redraw)
-        plt.ylim([-5, 900])                    # Set y-axis bounds
+        plt.ylim([-5, 10000])                    # Set y-axis bounds
         plt.xlim([n - 500, n + 5])             # Set scrolling x-axis bounds
         plt.plot(combined_df['S01'].iloc[-500:], 'r-', label="Gas Sensor 1")
         plt.plot(combined_df['S02'].iloc[-500:], 'b-', label="Gas Sensor 2")  # Set gas sensor data colors, and
-        plt.plot(combined_df['A01'].iloc[-500:]*10, 'g-', label="Airspeed Sensor 1")  # Plot the last 1000 datapoints of each
+        plt.plot(combined_df['A01'].iloc[-500:]*100, 'g-', label="Airspeed Sensor 1")  # Plot the last 1000 datapoints of each
         plt.title("Sensor Datafeed [2sec delay]")   # Give the user more context
         plt.xlabel("Time (seconds)")
+        plt.ylabel("Hazardous Gas Concentration (ppm)")
         if n == 0:                                  # Only add one legend, not a new one for each loop
             plt.legend(loc="upper left")
         plt.pause(0.0001)                           # Mandatory pause command
