@@ -50,6 +50,24 @@ void setup() {
   Serial.begin(9600);
   pinMode(53, INPUT_PULLUP);                           //pin for button to signal data collection finished
 
+  //gas sensor setup continued
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
+  pinMode(A3, INPUT);
+  pinMode(A4, INPUT);
+  pinMode(A5, INPUT);
+  pinMode(A6, INPUT);
+  pinMode(A7, INPUT);
+  pinMode(A8, INPUT);
+  pinMode(A9, INPUT);
+  pinMode(A10, INPUT);
+  pinMode(A11, INPUT);
+  pinMode(A12, INPUT);
+  pinMode(A13, INPUT);
+  pinMode(A14, INPUT);
+  pinMode(A15, INPUT);
+
   //airflow sensor setup
   Wire.begin();
   delay(500);
@@ -59,15 +77,15 @@ void setup() {
   pinMode(24, OUTPUT); //yellow led
   pinMode(26, OUTPUT); //red led
   digitalWrite(22, HIGH);                            //startup test to make sure no LEDs are burned out
-  delay(100);
+  delay(300);
   digitalWrite(24, HIGH);
-  delay(100);
+  delay(300);
   digitalWrite(26, HIGH);
-  delay(100);
+  delay(300);
   digitalWrite(22, LOW);
   digitalWrite(24, LOW);
   digitalWrite(26, LOW);
-  delay(100);
+  delay(300);
   digitalWrite(22, HIGH);                            //make sure the green LED stays on
 
   //LCD setup
@@ -90,6 +108,10 @@ void setup() {
   Serial.println("S01 S02 S03 S04 S05 S06 S07 S08 S09 S10 S11 S12 S13 S14 S15 S16 A01");             //names of sensors go here
   Serial.println("15 28 7 19 3 12 25 31 10 21 6 30 13 24 5 9 1");                 //get node numbers from https://github.com/sgoodyear/Arduino-Python_sensor_datalink/blob/master/ref.bmp
 
+  lcd.setCursor(0, 0);
+  lcd.print("....Working....");
+  lcd.setCursor(0, 1);
+  lcd.print("Timestamp:");
 }
 
 
@@ -129,10 +151,6 @@ void loop() {
   // Pad the string with leading zeros to ensure it is always 5 digits
   while (rightnowString.length() < 5) {
     rightnowString = "0" + rightnowString;
-    lcd.setCursor(0, 0);
-    lcd.print("....Working....");
-    lcd.setCursor(0, 1);
-    lcd.print("Timestamp:");
     lcd.setCursor(11, 1);
     lcd.print(rightnowString);
   }
@@ -146,22 +164,22 @@ void loop() {
 
 
   //Smoke sensors
-    smk01 = analogRead(A0);  //smk01 = map(smk01, 300, 10, 750, 1000000);
-    smk02 = analogRead(A1);  //smk02 = map(smk02, 300, 10, 750, 1000000);
-    smk03 = analogRead(A2);  //smk03 = map(smk03, 300, 10, 750, 1000000);  //approximate conversion from sensor data to PPM reading
-    smk04 = analogRead(A3);  //smk04 = map(smk04, 300, 10, 750, 1000000);
-    smk05 = analogRead(A4);  //smk05 = map(smk05, 300, 10, 750, 1000000);  //unfortuantely, doing this causes it to freeze partway
-    smk06 = analogRead(A5);  //smk06 = map(smk06, 300, 10, 750, 1000000);  //through line 73...
-    smk07 = analogRead(A6);  //smk07 = map(smk07, 300, 10, 750, 1000000);
-    smk08 = analogRead(A7);  //smk08 = map(smk08, 300, 10, 750, 1000000);
-    smk09 = analogRead(A8);  //smk09 = map(smk09, 300, 10, 750, 1000000);
-    smk10 = analogRead(A9);  //smk10 = map(smk10, 300, 10, 750, 1000000);
-    smk11 = analogRead(A10); //smk11 = map(smk11, 300, 10, 750, 1000000);
-    smk12 = analogRead(A11); //smk12 = map(smk12, 300, 10, 750, 1000000);
-    smk13 = analogRead(A12); //smk13 = map(smk13, 300, 10, 750, 1000000);
-    smk14 = analogRead(A13); //smk14 = map(smk14, 300, 10, 750, 1000000);
-    smk15 = analogRead(A14); //smk15 = map(smk15, 300, 10, 750, 1000000);
-    smk16 = analogRead(A15); //smk16 = map(smk16, 300, 10, 750, 1000000);
+    smk01 = constrain(analogRead(A0), 250, 800);  smk01 = constrain(map(smk01, 300, 800, 0, 9000), 0, 10000);
+    smk02 = constrain(analogRead(A1), 250, 800);  smk02 = constrain(map(smk02, 300, 800, 0, 9000), 0, 10000);
+    smk03 = constrain(analogRead(A2), 250, 800);  smk03 = constrain(map(smk03, 300, 800, 0, 9000), 0, 10000);  //approximate conversion from sensor data to PPM reading
+    smk04 = constrain(analogRead(A3), 250, 800);  smk04 = constrain(map(smk04, 300, 800, 0, 9000), 0, 10000);
+    smk05 = constrain(analogRead(A4), 250, 800);  smk05 = constrain(map(smk05, 300, 800, 0, 9000), 0, 10000);
+    smk06 = constrain(analogRead(A5), 250, 800);  smk06 = constrain(map(smk06, 300, 800, 0, 9000), 0, 10000);
+    smk07 = constrain(analogRead(A6), 250, 800);  smk07 = constrain(map(smk07, 300, 800, 0, 9000), 0, 10000);
+    smk08 = constrain(analogRead(A7), 250, 800);  smk08 = constrain(map(smk08, 300, 800, 0, 9000), 0, 10000);
+    smk09 = constrain(analogRead(A8), 250, 800);  smk09 = constrain(map(smk09, 300, 800, 0, 9000), 0, 10000);
+    smk10 = constrain(analogRead(A9), 250, 800);  smk10 = constrain(map(smk10, 300, 800, 0, 9000), 0, 10000);
+    smk11 = constrain(analogRead(A10), 250, 800); smk11 = constrain(map(smk11, 300, 800, 0, 9000), 0, 10000);
+    smk12 = constrain(analogRead(A11), 250, 800); smk12 = constrain(map(smk12, 300, 800, 0, 9000), 0, 10000);
+    smk13 = constrain(analogRead(A12), 250, 800); smk13 = constrain(map(smk13, 300, 800, 0, 9000), 0, 10000);
+    smk14 = constrain(analogRead(A13), 250, 800); smk14 = constrain(map(smk14, 300, 800, 0, 9000), 0, 10000);
+    smk15 = constrain(analogRead(A14), 250, 800); smk15 = constrain(map(smk15, 300, 800, 0, 9000), 0, 10000);
+    smk16 = constrain(analogRead(A15), 250, 800); smk16 = constrain(map(smk16, 300, 800, 0, 9000), 0, 10000);
 
     //serial data output format:
     //___|_____________
@@ -209,6 +227,8 @@ void loop() {
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Done!");
+    lcd.setCursor(11, 0);
+    lcd.print(rightnowString);
     while (true) {                                                     //lock the Arduino into an infinite loop until reset
       stop = digitalRead(53);
       if (stop == LOW) {                                                //flashing Y + R LEDs, reminder to depress killswitch to proceed
@@ -221,6 +241,8 @@ void loop() {
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Done!");
+        lcd.setCursor(11, 0);
+        lcd.print(rightnowString);
       }
       if (stop != LOW) {                                                //flashing Y, ready for user to press reset button
         delay(250);
