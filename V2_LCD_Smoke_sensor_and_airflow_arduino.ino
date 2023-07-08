@@ -151,10 +151,9 @@ void loop() {
   // Pad the string with leading zeros to ensure it is always 5 digits
   while (rightnowString.length() < 5) {
     rightnowString = "0" + rightnowString;
+  }
     lcd.setCursor(11, 1);
     lcd.print(rightnowString);
-  }
-
 
 
   //Timestamp
