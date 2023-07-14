@@ -136,7 +136,7 @@ while True:                                    # Main program loop
         plt.figure(1)                          # Set up the data plot
         plt.ion()                              # Enable interactive graph (plot will automatically redraw)
         plt.ylim([-5, 10000])                    # Set y-axis bounds
-        plt.xlim([n - 500, n + 5])             # Set scrolling x-axis bounds
+        plt.xlim([n - 500, n + 1])             # Set scrolling x-axis bounds
         plt.plot(combined_df['S01'].iloc[-500:], 'r-', label="Gas Sensor 1")
         plt.plot(combined_df['S02'].iloc[-500:], 'b-', label="Gas Sensor 2")  # Set gas sensor data colors, and
         plt.plot(combined_df['A01'].iloc[-500:]*100, 'g-', label="Airspeed Sensor 1")  # Plot the last 1000 datapoints of each
