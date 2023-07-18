@@ -400,6 +400,8 @@ for i in range(len(sensors)):
 #flow=graphcopy*1
 
 MAX=np.max(np.abs(flow))
+if MAX == 0:
+    MAX = 1
 flow=flow/MAX
 totalTravelTime=0
 
