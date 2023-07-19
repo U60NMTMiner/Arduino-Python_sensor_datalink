@@ -9,7 +9,7 @@ import openpyxl as xl
 now = datetime.datetime.now()        # Setting up datetime to create unique file name for each test
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
-ser = serial.Serial('COM10', 9600)    # Setup for reading the serial communication
+ser = serial.Serial('COM10', 115200)    # Setup for reading the serial communication
 print("Serial port opened")
 print("For best results, please allow smoke sensors to warm to operating temperature for 30 minutes before use!")
 print()
