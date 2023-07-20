@@ -6,6 +6,18 @@ import sys
 import os
 import openpyxl as xl
 
+
+colors = [  # List of 64 colors to use to plot sensor data
+    '#FF0000', '#00FF00', '#0000FF', '#FF6600', '#6600FF', '#FF00FF', '#FFFF00', '#00FFFF',
+    '#FF3399', '#FF9933', '#3399FF', '#FF33CC', '#CC33FF', '#33FFCC', '#FFCC33', '#99FF33',
+    '#33FF99', '#FF3366', '#3366FF', '#FF66CC', '#CC66FF', '#66FFCC', '#FF6633', '#FFCC66',
+    '#66CCFF', '#FFCC99', '#99CCFF', '#FF6666', '#6666FF', '#FF99CC', '#CC99FF', '#99FFCC',
+    '#FF9999', '#9999FF', '#FFCCCC', '#CCCCFF', '#CCFFCC', '#FF99FF', '#99FFFF', '#FFFF99',
+    '#FF0066', '#FF6600', '#FF9900', '#FF0033', '#9900FF', '#FF99FF', '#33FF66', '#33FF99',
+    '#3399FF', '#9933FF', '#CC33CC', '#FFCC00', '#66FFFF', '#FF6666', '#6666FF', '#FF0000',
+    '#00FF00', '#0000FF', '#FF6600', '#6600FF', '#FF00FF', '#FFFF00', '#00FFFF', '#FF3399',
+    '#FF9933', '#3399FF', '#FF33CC', '#CC33FF', '#33FFCC', '#FFCC33', '#99FF33', '#33FF99']
+
 now = datetime.datetime.now()        # Setting up datetime to create unique file name for each test
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
@@ -132,7 +144,7 @@ while True:                                    # Main program loop
             format_file()
             print()
             print("Success!")
-            print("Formatted data exported as file: " + filename + "mod.xlsx")  # Then export the file
+            print("Formatted data exported as file: duplicate.xlsx")  # Then export the file
             sys.exit(0)                                  # Then shut down this program
 
         data = data.split(',')                 # Separate the sensors' data
@@ -141,17 +153,41 @@ while True:                                    # Main program loop
         row_data = [float(item[3:]) for item in data]    #put the data into a list, everything from the 8th character on
         combined_df = pd.concat([combined_df, pd.DataFrame([row_data], columns=[prelim])], ignore_index=True)
 
-        plt.figure(1)                          # Set up the data plot
         plt.ion()                              # Enable interactive graph (plot will automatically redraw)
-        plt.ylim([-5, 10000])                    # Set y-axis bounds
-        plt.xlim([n - 500, n + 1])             # Set scrolling x-axis bounds
-        plt.plot(combined_df['S01'].iloc[-500:], 'r-', label="Gas Sensor 1")
-        plt.plot(combined_df['S02'].iloc[-500:], 'b-', label="Gas Sensor 2")  # Set gas sensor data colors, and
-        plt.plot(combined_df['A01'].iloc[-500:]*100, 'g-', label="Airspeed Sensor 1")  # Plot the last 1000 datapoints of each
-        plt.title("Sensor Datafeed [2sec delay]")   # Give the user more context
+        if n == 0:
+            plt.figure(figsize=(10, 5), facecolor='#F0F0F0')
+
+        # First subplot
+        plt.subplot(1, 2, 1)
+        plt.ylim([-5, 10000])  # Set y-axis bounds
+        plt.xlim([n - 300, n + 1])  # Set scrolling x-axis bounds
+        plt.plot(combined_df['S01'].iloc[-300:], 'r-', label="Gas Sensor 1")
+        plt.plot(combined_df['S02'].iloc[-300:], 'b-', label="Gas Sensor 2")  # Set gas sensor data colors, and
+        plt.plot(combined_df['A01'].iloc[-300:]*100, 'g-', label="Airspeed Sensor 1")  # Plot the last 1000 datapoints of each
+        plt.title("Gas Concentration and Airspeed")   # Give the user more context
         plt.xlabel("Time (seconds)")
         plt.ylabel("Hazardous Gas Concentration (ppm)")
         if n == 0:                                  # Only add one legend, not a new one for each loop
             plt.legend(loc="upper left")
+
+        # Second subplot
+        plt.subplot(1, 2, 2)
+        plt.ylim([15, 80])  # Set y-axis bounds
+        plt.xlim([n - 300, n + 1])  # Set scrolling x-axis bounds
+        for u in range(1, 14):
+            if u < 10:
+                u_str = f"T0{u}"
+            else:
+                u_str = f"T{u}"
+            plt.plot(combined_df[u_str].iloc[-300:], label=f"T{u}", color=colors[u - 1])
+        plt.title("Temperature")
+        plt.xlabel("Time (seconds)")
+        plt.ylabel("Temperature ($^\\circ$C)")
+        if n == 0:                                  # Only add one legend, not a new one for each loop
+            plt.legend(loc="upper left")
+
+        # Common to all subplots
+        plt.suptitle("Sensor Datafeed [2sec delay]")
+        plt.tight_layout()
         plt.pause(0.0001)                           # Mandatory pause command
         n += 1                                      # Move master index forward
