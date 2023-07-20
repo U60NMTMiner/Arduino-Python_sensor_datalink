@@ -46,7 +46,7 @@ def format_file():                                                # Modify the o
     data_workbook.save(filename + "mod.xlsx")                     # Save new file
     os.remove("C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\" + filename)  #clean up preliminary file
 
-    source_workbook = xl.load_workbook("M_E_DataTemplate.xlsx")   # Load the template data file
+    source_workbook = xl.load_workbook("../M_E_DataTemplate.xlsx")   # Load the template data file
     dupe_workbook = xl.Workbook()                                 # Create new spreadsheet to preserve original
     for sheet_name in source_workbook.sheetnames:                 # For each sheet in the template...
         source_sheet = source_workbook[sheet_name]                # Get the source sheet...

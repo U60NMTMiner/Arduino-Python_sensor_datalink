@@ -10,7 +10,7 @@ now = datetime.datetime.now()        # Setting up datetime to create unique file
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
 ser = serial.Serial('COM10', 115200)    # Setup for reading the serial communication
-print("Serial port opened")
+print("Serial port connected")
 print("For best results, please allow smoke sensors to warm to operating temperature for 30 minutes before use!")
 print()
 
@@ -20,6 +20,7 @@ while True:
         break                              # Switch to main program with the key-phrase
     else:
         print(dtf)                         # Otherwise just mirror the startup info
+    del dtf
 
 prelim = ser.readline().decode().strip()  # Read just the first line of serial for sensor names
 prelim = prelim.split(' ')                # Put the sensor ID's sent by the Arduino into a list
