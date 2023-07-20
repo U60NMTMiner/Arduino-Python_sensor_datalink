@@ -38,7 +38,7 @@ Python program. Use either of them in Mine_Evacuation.py and see what happens! B
 <img width="350" alt="image" src="https://github.com/sgoodyear/Arduino-Python_sensor_datalink/assets/96261962/552dea31-c146-4be5-a775-4a0d6e3506c5">
 
 
-
+.
 
 
 [Python program] Common issues and their solutions:
