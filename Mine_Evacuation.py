@@ -381,7 +381,7 @@ B=(sensorSXY[:,1]+sensorSXY[:,3])/2
 A=sensorDATAXY.values[:,0]
 B=sensorDATAXY.values[:,1]
 #fig=plt.figure()
-img = mpimg.imread('C:\\Users\\Sean\\Desktop\\New code\\CO concentration Model_3.png')
+img = mpimg.imread('C:\\Users\\Sean\\PycharmProjects\\Gas sensor\\CO concentration Model_3.png')
 # Output Images
 ximg=np.linspace(-45190.00,-45400.00,np.shape(img)[0])
 yimg=np.linspace(-3006075.00,	-3005450.00,np.shape(img)[1])
