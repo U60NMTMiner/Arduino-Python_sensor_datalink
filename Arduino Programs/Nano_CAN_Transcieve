@@ -1,0 +1,72 @@
+#include <SPI.h>
+#include <mcp2515.h>
+
+struct can_frame canControl;  // Setup for TX-ing
+struct can_frame canMsg;      // Setup for RX-ing
+MCP2515 mcp(10);          // Identify where the "CS" (aka "SS") pin is connected
+unsigned int PingCount;
+
+
+void setup() {
+  delay(100);
+  Serial.begin(1000000);  // Use fastest baud rate that the Pi can support for max data thruput
+  delay(500);
+  mcp.reset();
+  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ); // Set up the CAN module
+  mcp.setNormalMode();                    // Will not read its own messages
+  delay(100);                                 // Mandatory delay
+
+  canControl.can_id = 0x7E;                   // Set master controller's ID ("~" in hex)
+  
+  // After startup, send a "ping" signal to figure out which other Arduinos
+  // are on the CAN bus network
+  Serial.println(F("Pinging CAN bus..."));
+  canControl.can_dlc = 2;                     // Sending 2 bytes of data
+  canControl.data[0] = byte("r");
+  canControl.data[1] = byte("?");             // Define message
+  delay(10);
+  mcp.sendMessage(&canControl);           // Send message
+  delay(500);                                // Wait for replies
+
+  while (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK && PingCount < 3) {
+    Serial.print("Ping from: ");
+    Serial.println(char(canMsg.data[0]));  // Print ID as character
+    PingCount ++;
+    delay(100);
+  }
+
+  Serial.print(F("Pings recieved from "));
+  Serial.print(PingCount);
+  Serial.println(F(" of 3 expected microcontrollers."));
+
+
+  Serial.println(F("Nano Pass-Through ready"));   // This is the only string the Pytohon interpreter should recieve
+}
+
+void loop() {
+  if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
+    Serial.write(canMsg.can_id);     // Print ID as hex (for Python interpreter)
+    Serial.write(0x20);                 // "space" character instead of spacebar
+    //Serial.print(char(canMsg.can_id));  // Print ID as character
+    //Serial.print(" ");
+    //Serial.print(canMsg.can_dlc, HEX);  // print message length
+    //Serial.print(" ");
+    
+    if (canMsg.can_id == 0x5E){                // Listen for data termination message
+      //Serial.print(char(canMsg.data[0]));
+      //Serial.print(" ");
+      Serial.write(canMsg.data[0]);       // Print as hex (for Python interpreter)
+      Serial.write(0x20);
+    }
+    else{
+      for (int i = 0; i<canMsg.can_dlc; i++)  {  // Print the data for anything
+        //Serial.print(canMsg.data[i], BIN);       // in binary
+        //Serial.print(" ");
+        Serial.write(canMsg.data[i]);       // For Python interpreter
+        Serial.write(0x20);
+      }
+    }
+
+    Serial.println();      // New line after entire CAN message has been recieved
+  }
+}
