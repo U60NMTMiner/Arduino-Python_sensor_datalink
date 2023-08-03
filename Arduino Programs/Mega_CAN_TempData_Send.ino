@@ -1,25 +1,3 @@
-/*//////////////////////////////////////////////////////////////
- * Multiplexer useage:
- * 0x70 ] 1/2 Temp/humidity/pressure sensors
- * 0x71 ] 2/2 Temp/humidity/pressure sensors
- *
- * 0x72 ] N.C.
- * 0x73 ] N.C.
- * 0x74 ] N.C.
- * 0x75 ] N.C.
- * 0x76 ] N.C.
- * 0x77 ] N.C.
- * 
- //////////////////////////////////////////////////////////////
- * 
- * 
- * 
- * 
- * 
- * 
- * 
-*///////////////////////////////////////////////////////////////
-
 #include <Wire.h>                // Standard i2c communication library
 #include <Adafruit_AHTX0.h>      // Tempurature and humidity sensor library
 
@@ -38,19 +16,14 @@ float tmps[14]; // Array storage of sensor values. [Assuming 14 sensors]
 Adafruit_AHTX0 aht00; // Initialize temperatue sensor(s)
 
 bool stop;                             // stop variable to hold the HIGH/LOW signal from the data dump switch
-unsigned long rightnow;                
-unsigned long justnow;                 // rightnow/justnow/previousMillis variables to keep track of how long the program has been running
-unsigned long previousMillis = 0;
-unsigned long interval = 30000;        // interval variable defines how often data is sent (in milliseconds)
-String rightnowString;                 // righnowString to timestamp data for the LCD screen (and optionally for serial)
 
 #include <SPI.h>
 #include <mcp2515.h>
 struct can_frame canData;   // Structure for sending data
 struct can_frame canStatus; // Structure for signaling end of data
 struct can_frame canMsg;    // Structure for incomming messages
-
 MCP2515 mcp(53);
+bool go = false;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to convert an long integer into 4 bytes
@@ -78,7 +51,7 @@ long B2I(byte* bytes) {
  * individual sensor's channel on the multiplexer (1 thru 7).
 */
 void TCA70(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x70"));
     while(1);
   }
@@ -88,7 +61,7 @@ void TCA70(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA71(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x71"));
     while(1);
   }
@@ -98,7 +71,7 @@ void TCA71(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA72(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x72"));
     while(1);
   }
@@ -108,7 +81,7 @@ void TCA72(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA73(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x73"));
     while(1);
   }
@@ -118,7 +91,7 @@ void TCA73(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA74(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x74"));
     while(1);
   }
@@ -128,7 +101,7 @@ void TCA74(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA75(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x75"));
     while(1);
   }
@@ -138,7 +111,7 @@ void TCA75(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA76(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x76"));
     while(1);
   }
@@ -148,7 +121,7 @@ void TCA76(uint8_t bus){
   Wire.endTransmission();
 }
 void TCA77(uint8_t bus){
-  if (bus > 7){
+  if (bus > 7 || bus < 0){
     Serial.println(F("Critical Error: Invalid channel number sent to 0x77"));
     while(1);
   }
@@ -207,8 +180,7 @@ void setup() {
   canStatus.can_dlc = 1;
   canStatus.data[0] = canData.can_id;
 
-  Serial.begin(115200);                                      // Begin serial stream
-  pinMode(48, INPUT_PULLUP);                               // Set special pinmode for the reset button
+  Serial.begin(1000000);                                   // Begin serial stream
 
   delay(100);
   Serial.println(F("Serial connection to PC initialized"));  //(F()) saves string to flash & keeps dynamic memory free
@@ -222,6 +194,8 @@ void setup() {
   Wire.begin();
   delay(100);
   Serial.println(F("i2c bus initialized"));
+
+  pinMode(48, INPUT_PULLUP);                               // Set  pinmode for the reset button
 
 // AHT 20 temperature/humidity sensor startup tests
   /* This section of the code cycles through the channels of the first 2 multiplexers (0x70 and 0x71)
@@ -272,23 +246,14 @@ void setup() {
 
 void loop() {
   if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-    if (canMsg.can_id == 0x7E && canMsg.can_dlc == 2){   // Listen for a message from master control unit
-        mcp.sendMessage(&canStatus);  // send back status
-        Serial.println("ACK sent to master's ping (T)");
+    if (canMsg.can_id == 0x7E && canMsg.can_dlc == 2){   // Listen for startup ping from master control unit
+      mcp.sendMessage(&canStatus);                       // send back status
+      delay(5);
+      Serial.println("ACK sent to master's ping (T)");
     }
-  }
-
-
-  rightnow = millis();
-  if (rightnow - previousMillis >= interval && rightnow != justnow) {
-    previousMillis = rightnow;
-    rightnowString = String(rightnow / 1000); // Convert rightnow to string for the LCD to display
-
-      while (rightnowString.length() < 5) {
-        rightnowString = "0" + rightnowString;    // Pad the string with leading zeros to ensure it is always 5 digits.
-      }                                           // This ensures it will always properly fit on the LCD display.
-
-      // Temperature sensors
+    else if (canMsg.can_id == 0x7E && canMsg.can_dlc == 1){  // Listen for "Go" message from master control
+      go = true;
+      // Read temperature sensors
       for(int i = 0; i <= 7; i++){
         TCA70(i);                                          // Change multiplexer 0x70 to channel "i"
         sensors_event_t humidity, temp;                    // Tell the sensors to get data
@@ -296,7 +261,6 @@ void loop() {
         aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send theie data
         tmps[i] = temp.temperature;                        // Store the data in the temperature data array
       }
-
       for(int i = 8; i <= 13; i++){
         TCA71(i - 8);                                      // Set multiplexer 0x71 to channel "i-8" to compensate for different loop start position
         sensors_event_t humidity, temp;                    // Tell the sensors to get data
@@ -304,23 +268,28 @@ void loop() {
         aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send their data
         tmps[i] = temp.temperature;                        // Store the data in the temperature data array
       }
-
+    }
+    else if (canMsg.can_id == 0x5E && canMsg.data[0] == 0x53 && go == true){  // go=True condition to prevent spamming after Master's ping
+      delay(5);
       for (int i = 0; i <= 13; i++){
         I2B(long(tmps[i] * 1000), databytes);
         for(int o = 0; o < 4; o++){
           canData.data[o] = databytes[o];
         }
         mcp.sendMessage(&canData);
-        delay(4);
+        delay(5);
       }
-      Serial.println("Data sent");
-
-
-    }                                                                     // End of the if statement that runs every interval (default every 1 second)
-
+      
+      mcp.sendMessage(&canStatus);              // Then send terminator to signal end of data
+      delay(5);
+      Serial.println();
+      Serial.println("Data sent over CAN");
+      go = false;
+    }
+  }
 
     // Killswitch
-    stop = digitalRead(48);                                               // At the end of each loop, the program checks the state of the switch
+    stop = digitalRead(48);                                 // At the end of each loop, the program checks the state of the switch
     if (stop == LOW) {
       Serial.println("!");                                                // If the button is pressed, send the "end of data" indicator...
       mcp.sendMessage(&canStatus);
@@ -335,7 +304,6 @@ void loop() {
           delay(500);
           digitalWrite(24, LOW);
           digitalWrite(26, HIGH);
-
         }
         if (stop != LOW) {                                                // Flashing Y LED, ready for user to press reset button
           delay(250);
@@ -348,5 +316,4 @@ void loop() {
       }
     }
 
-    justnow = rightnow;                                                  // Update time since the time interval loop last ran
-  }
+}
