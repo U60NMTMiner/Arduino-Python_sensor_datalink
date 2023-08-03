@@ -6,11 +6,14 @@ struct can_frame canMsg;      // RX: Any incoming CAN messages
 struct can_frame canGo;       // TX: "Go" signal to tell sensors to collect data
 MCP2515 mcp(10);          // Identify where the "CS" (aka "SS") pin is connected
 
-int incomimgByte;             // Variable for holding incoming serial data
+int incomingByte;             // Variable for holding incoming serial data
+
+unsigned int starttime;
+unsigned int time;            // Variables to track time
+byte pingCount = 0;               // Count number of devices on CAN bus
 
 
 void setup() {
-
   // Pre-defining messsages that can be sent on the CAN bus
   canControl.can_id = 0x7E;                   // Set master controller's ID ("~" in hex)
   canControl.can_dlc = 2;                     // Sending 2 bytes of data
@@ -23,16 +26,48 @@ void setup() {
 
 
   Serial.begin(1000000);  // Use fastest baud rate that the Pi can support for max data thruput
+  Serial.println(F("Serial connection to PC initialized"));
+  
   mcp.reset();
   mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ); // Set up the CAN module
   mcp.setNormalMode();                    // Will not read its own messages
   delay(100);                             // Mandatory delay
-  
+  Serial.println(F("CAN Connection initialized"));
+
+
   // After startup, send a "ping" signal to figure out which other Arduinos are on the network
-  mcp.sendMessage(&canControl);           // Send message
+  Serial.println(F("Giving Arduinos time to boot up..."));
+  delay(5000);                           // First wait for all Arduinos to complete startup tests
+  mcp.sendMessage(&canControl);           // Then send message
   delay(10);
+  Serial.println(F("Pinging CAN network..."));
+  starttime = millis();
+
+  while (time <= 10000 + starttime){
+    if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
+      Serial.print(F("Response from: "));
+      Serial.write(canMsg.can_id); 
+      Serial.write(0x20);
+      if (canMsg.can_id == 0x5E){
+        Serial.write(canMsg.data[0]); 
+        Serial.write(0x20);
+      }
+      Serial.println();
+      pingCount ++;
+    }
+    time = millis();
+  }
+  Serial.print(F("Responses from "));
+  Serial.print(pingCount);
+  Serial.println(F(" of 3 Arduinos"));
+  delay(100);
 
   Serial.println(F("Nano Pass-Through ready"));   // Announce startup complete
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);                         // Turn on built-in LED
+  delay(100);
+
+  //mcp.sendMessage(&canGo);
 }
 
 void loop() {
@@ -47,7 +82,7 @@ void loop() {
     if (canMsg.can_id == 0x5E){                // Listen for data termination message
       //Serial.print(char(canMsg.data[0]));
       //Serial.print(" ");
-      Serial.write(canMsg.data[0]);       // Print as hex (for Python interpreter)
+      Serial.write(canMsg.data[0]);       // Print  as hex (for Python interpreter)
       Serial.write(0x20);
     }
     else{
@@ -64,7 +99,7 @@ void loop() {
 
 
   if(Serial.available() > 0){             // If there is an incoming serial message from Python controller...
-    incomimgByte = Serial.read();         // Store it as a variable...
+  incomingByte = Serial.read();         // Store it as a variable...
 
     if (incomingByte == -1){              // Check if there is actually any data...
       goto srxErrOut;                        // If for some reason there isn't anything there, just move on
@@ -77,5 +112,5 @@ void loop() {
     }
   }
   srxErrOut:                              // Serial RX Error Out "safe resume" point
-
+  delay(0);
 }
