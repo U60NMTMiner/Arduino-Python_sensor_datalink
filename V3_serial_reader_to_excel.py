@@ -8,7 +8,7 @@ import openpyxl as xl
 
 
 colors = [  # List of 64 colors to use to plot sensor data
-    '#FF0000', '#00FF00', '#0000FF', '#FF6600', '#6600FF', '#FF00FF', '#FFFF00', '#00FFFF',
+    '#FF0000', '#00FF00', '#0000FF', '#FF6600', '#6600FF', '#FF00FF', '#EEEE00', '#00FFFF',
     '#FF3399', '#FF9933', '#3399FF', '#FF33CC', '#CC33FF', '#33FFCC', '#FFCC33', '#99FF33',
     '#33FF99', '#FF3366', '#3366FF', '#FF66CC', '#CC66FF', '#66FFCC', '#FF6633', '#FFCC66',
     '#66CCFF', '#FFCC99', '#99CCFF', '#FF6666', '#6666FF', '#FF99CC', '#CC99FF', '#99FFCC',
@@ -21,7 +21,7 @@ colors = [  # List of 64 colors to use to plot sensor data
 now = datetime.datetime.now()        # Setting up datetime to create unique file name for each test
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"
 
-ser = serial.Serial('COM10', 115200)    # Setup for reading the serial communication
+ser = serial.Serial('COM10', 9600)    # Setup for reading the serial communication
 print("Serial port connected")
 print("For best results, please allow smoke sensors to warm to operating temperature for 30 minutes before use!")
 print()
