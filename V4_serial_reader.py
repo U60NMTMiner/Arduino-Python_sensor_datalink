@@ -33,15 +33,18 @@ try:  # Main code runs here
     last_deletion = False
 
     while True:
-        data = ser.read()  # .strip()                                                         # As data comes in...
+        data = ser.read()                                                                 # As data comes in...
         buffer += data                                                                    # Put it into a buffer for temporary storage
         time.sleep(0)
 
         if buffer.endswith(b"\r\n"):                                                      # Recreating my own "ser.read().strip()" function
             buffer = buffer[:-2]                                                          # Only remove /r or /n if they appear directly next to each other
-        if buffer.endswith(b" ") and data != b" ":
+        if buffer.endswith(b" ") and data != b" " and not last_deletion:
             buffer = buffer[:-1]                                                          # Remove empty space bytes
             DataCount += 1                                                     # Keep track of how many bytes have arrived, since each byte has a space after it
+            last_deletion = True
+        else:
+            last_deletion = False
 
         if DataCount == 5:
             DataCount = 0
