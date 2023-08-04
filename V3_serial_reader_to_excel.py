@@ -86,7 +86,7 @@ def format_file():                                                # Modify the o
             cell = ws2edit.cell(row=row, column=column)
             cell.value = 0                                        # Put in zeros to fill any would-be empty cells
     for w in range(datalen):
-        ws2edit.cell(row=w + 5, column=1).value = w               # Put in the new index
+        ws2edit.cell(row=w + 5, column=1).value = w * 5               # Put in the new index
     del w
     del column
     del row

@@ -3,12 +3,19 @@
  * 0x70 ] 1/2 Temp/humidity/pressure sensors
  * 0x71 ] 2/2 Temp/humidity/pressure sensors
  *
- * 0x72 ] undefined
- * 0x73 ] undefined
- * 0x74 ] undefined
- * 0x75 ] undefined
- * 0x76 ] undefined
- * 0x77 ] undefined
+ * 0x72 ] N.C.
+ * 0x73 ] N.C.
+ * 0x74 ] N.C.
+ * 0x75 ] N.C.
+ * 0x76 ] N.C.
+ * 0x77 ] N.C.
+ * 
+ //////////////////////////////////////////////////////////////
+ * 
+ * 
+ * 
+ * 
+ * 
  * 
  * 
 *///////////////////////////////////////////////////////////////
@@ -35,7 +42,7 @@ bool stop;                             // stop variable to hold the HIGH/LOW sig
 unsigned long rightnow;                
 unsigned long justnow;                 // rightnow/justnow/previousMillis variables to keep track of how long the program has been running
 unsigned long previousMillis = 0;
-unsigned long interval = 1000;         // interval variable defines how often data is sent (in milliseconds)
+unsigned long interval = 5000;         // interval variable defines how often data is sent (in milliseconds)
 String rightnowString;                 // righnowString to timestamp data for the LCD screen (and optionally for serial)
 
 long smks[16];                         // Array storage for sensor values
@@ -213,7 +220,7 @@ byte fetch_pressure(unsigned int *p_P_dat, unsigned int *p_T_dat) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
-  Serial.begin(115200);                                    // Begin serial stream
+  Serial.begin(9600);                                    // Begin serial stream
   pinMode(53, INPUT_PULLUP);                               // Set special pinmode for the reset button
   for(int i = 0; i <= 15; i++){
     pinMode(smksPins[i], INPUT);                           // Set pinmodes for all analog pins
@@ -330,6 +337,8 @@ void setup() {
   Serial.print(F(" 29 23 22 20 10 17 6 2 8 10 13 24 27 30"));
   Serial.println();
 
+  // One line of sample data
+  Serial.println(F("S010,S020,S030,S040,S050,S060,S070,S080,S090,S100,S110,S120,S130,S140,S150,S160,A010,T010,T020,T030,T040,T050,T060,T070,T080,T090,T100,T110,T120,T130,T140,"));
 
   //Serial.println("S01 S02 A01");             //names of sensors go here
   //Serial.println("23 14 1");                 //get node numbers from https://github.com/sgoodyear/Arduino-Python_sensor_datalink/blob/master/ref.bmp
@@ -347,34 +356,26 @@ void loop() {
     previousMillis = rightnow;
     rightnowString = String(rightnow / 1000); // Convert rightnow to string for the LCD to display
 
-    while (rightnowString.length() < 5) {
-      rightnowString = "0" + rightnowString;    // Pad the string with leading zeros to ensure it is always 5 digits.
-    }                                           // This ensures it will always properly fit on the LCD display.
+      while (rightnowString.length() < 5) {
+        rightnowString = "0" + rightnowString;    // Pad the string with leading zeros to ensure it is always 5 digits.
+      }                                           // This ensures it will always properly fit on the LCD display.
       lcd.setCursor(11, 1);
       lcd.print(rightnowString);
 
 
-    // Timestamp
+      // Timestamp
       //Serial.print("Ts"); Serial.print(rightnowString); Serial.print(",");
           // Not currently using timestamp becasue the serial comms are already being sent in 1-sec intervals.
           // Therefore, the index of the data created in python is the 'timestamp.'
 
-    // Smoke sensors
+      // Smoke sensors
       for(int i = 0; i <= 15; i++){                                     // Reads all 16 analog gas sensors in 3 lines instead of 16
         smkN = constrain(analogRead(smksPins[i]), 250, 800);
-        smks[i] = constrain(map(smkN, 250, 800, 0, 10000), 0, 10000);   // Map function gives readings as approximate PPMs
+        smks[i] = constrain(map(smkN, 250, 800, 0, 15000), 0, 15000);   // Map function gives readings as approximate PPMs
       }
 
-      for (int i = 0; i <= 15; i++) {
-        Serial.print("S");
-        if (i < 9) {
-          Serial.print("0");                                              // Add leading zero for single-digit sensor IDs
-        }
-        Serial.print(i + 1);                                              // Print the sensor ID (there is no sensor 0)
-        Serial.print(smks[i]); Serial.print(",");                         // Print the sensor's data
-      }
 
-    // Airflow sensors
+      // Airflow sensors
       _status = fetch_pressure(&P_dat, &T_dat);       // Get readings from the sensor
       switch (_status) {                              // Built-in error diagnosis sent from sensor
         case 0: //Serial.println("Ok ");
@@ -394,38 +395,51 @@ void loop() {
       Vcor = VV - 7.47 -5;
       TR = (double)((T_dat * 0.09770395701));
       TR = TR - 50;
+
+
+      // Temperature sensors
+      for(int i = 0; i <= 7; i++){
+        TCA70(i);                                          // Change multiplexer 0x70 to channel "i"
+        sensors_event_t humidity, temp;                    // Tell the sensors to get data
+        delay(80);
+        aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send theie data
+        tmps[i] = temp.temperature;                        // Store the data in the temperature data array
+      }
+
+      for(int i = 8; i <= 13; i++){
+        TCA71(i - 8);                                      // Set multiplexer 0x71 to channel "i-8" to compensate for different loop start position
+        sensors_event_t humidity, temp;                    // Tell the sensors to get data
+        delay(80);
+        aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send their data
+        tmps[i] = temp.temperature;                        // Store the data in the temperature data array
+      }
+    
+
+
+      // Print all data to serial at the same time
+      for (int i = 0; i <= 15; i++) {
+        Serial.print("S");
+        if (i < 9) {
+          Serial.print("0");                             // Add leading zero for single-digit sensor IDs
+        }
+        Serial.print(i + 1);                             // Print the smoke sensor ID (there is no sensor 0)
+        Serial.print(smks[i]); Serial.print(",");        // Print the smoke sensor's data
+      }
+
       Serial.print("A01"); Serial.print(abs(Vcor)); Serial.print(",");    // While there is only one airspeed sensor no need for a for-loop
 
-
-    // Temperature sensors
-    for(int i = 0; i <= 7; i++){
-      TCA70(i);                                          // Change multiplexer 0x70 to channel "i"
-      sensors_event_t humidity, temp;                    // Tell the sensors to get data
-      aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send theie data
-      tmps[i] = temp.temperature;                        // Store the data in the temperature data array
-    }
-
-    for(int i = 8; i <= 15; i++){
-      TCA71(i - 8);                                      // Set multiplexer 0x71 to channel "i-8" to compensate for different loop start position
-      sensors_event_t humidity, temp;                    // Tell the sensors to get data
-      aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send their data
-      tmps[i] = temp.temperature;                        // Store the data in the temperature data array
-    }
-    for (int i = 0; i <= 14; i++) {
+      for (int i = 0; i <= 13; i++) {
         Serial.print("T");
         if (i < 9) {
           Serial.print("0");                             // Add leading zero for single-digit sensor IDs
         }
-        Serial.print(i + 1);                             // Print the sensor ID (there is no sensor 0)
-        Serial.print(tmps[i]); Serial.print(",");        // Print the sensor's data
+        Serial.print(i + 1);                             // Print the AHT20 sensor ID (there is no sensor 0)
+        Serial.print(tmps[i]); Serial.print(",");        // Print the AHT20 sensor's data
       }
 
-
-    // End the serial line to prepare for the next set of data
+      // End the serial line to prepare for the next set of data
       Serial.println();
     }                                                                     // End of the if statement that runs every interval (default every 1 second)
-
-
 
 
     // Killswitch
