@@ -39,12 +39,9 @@ try:  # Main code runs here
 
         if buffer.endswith(b"\r\n"):                                                      # Recreating my own "ser.read().strip()" function
             buffer = buffer[:-2]                                                          # Only remove /r or /n if they appear directly next to each other
-        if buffer.endswith(b" "):
-            if len(buffer) > 1 and buffer[-2:] == b"  ":
-                buffer = buffer[:-1]                                                          # Remove empty space bytes
-            else:
-                buffer = buffer.replace(b" ", b"")
-            DataCount = DataCount + 1                                                     # Keep track of how many bytes have arrived, since each byte has a space after it
+        if buffer.endswith(b" ") and data != b" ":
+            buffer = buffer[:-1]                                                          # Remove empty space bytes
+            DataCount += 1                                                     # Keep track of how many bytes have arrived, since each byte has a space after it
 
         if DataCount == 5:
             DataCount = 0
@@ -89,7 +86,7 @@ try:  # Main code runs here
                 sys.exit(1)
             lastbuffer = buffer  # For debug, save contents of buffer just in case
             buffer = b""                                                                  # Purge buffer for next set of incoming data
-            x = x + 1
+            x += 1
             if x == 3:
                 time.sleep(4)  # x seconds
                 # print("enter anything to continue")
