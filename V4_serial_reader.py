@@ -28,25 +28,24 @@ try:  # Main code runs here
     x = 0
     time.sleep(2)
     ser.write(b"\x47")
-    DataCount = 0                                                                         # Tracks the number of bytes of raw data per 4 bytes
-    IgnoreFlag = 0                                                                        # Tells the program to ignore coincidental terminator symbols
-    last_deletion = False
+    DataCount = -1                                                                         # Tracks the number of bytes of raw data per 4 bytes
 
     while True:
         data = ser.read()                                                                 # As data comes in...
-        buffer += data                                                                    # Put it into a buffer for temporary storage
+        buffer += data                                                                    # Put it into a buffer for short-term storage
         time.sleep(0)
 
         if buffer.endswith(b"\r\n"):                                                      # Recreating my own "ser.read().strip()" function
             buffer = buffer[:-2]                                                          # Only remove /r or /n if they appear directly next to each other
-        if buffer.endswith(b" ") and data != b" " and not last_deletion:
-            buffer = buffer[:-1]                                                          # Remove empty space bytes
-            DataCount += 1                                                     # Keep track of how many bytes have arrived, since each byte has a space after it
-            last_deletion = True
+            DataCount -= 2
+        # if buffer.endswith(b" ") and last_data != b" ":
+        #     buffer = buffer[:-1]                                                          # Remove empty space bytes
+        #     DataCount += 1                                                                # Keep track of how many bytes have arrived, since each byte has a space after it
+        # last_data = data
 
+        DataCount += 1
         if DataCount == 5:
             DataCount = 0
-            last_deletion = False
 
         time.sleep(0)
 
@@ -57,7 +56,7 @@ try:  # Main code runs here
                 # rawAData = SplitData                                                    # If so, save the data as new, unique variable
                 cleanAData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
                 cleanAData = cleanAData[:-1]
-            elif SplitData[0] == 83: #and len(SplitData) == 464:                            # Check for DEC "S"
+            elif SplitData[0] == 83:  # and len(SplitData) == 464:                            # Check for DEC "S"
                 # rawSData = SplitData
                 cleanSData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
                 cleanSData = cleanSData[:-1]
@@ -66,7 +65,7 @@ try:  # Main code runs here
                 cleanTData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
                 cleanTData = cleanTData[:-1]
             else:
-                print("\033[91m" + "Critical Error: Serial data did not begin with 'A', 'S', or 'T' identifier, or had missing bytes" + "\033[0m")
+                print("\033[91m" + "Critical Error: Serial data did not begin with 'A', 'S', or 'T' identifier, or had too many or too few bytes" + "\033[0m")
                 print("\033[91m" + "Diagnostic data:" + "\033[0m")
                 print("\033[91m" + "Last data read:" + "\033[0m")
                 print(data)
@@ -80,8 +79,6 @@ try:  # Main code runs here
                 print(lastbuffer)
                 print("\033[91m" + "DataCount:" + "\033[0m")
                 print("\033[91m" + str(DataCount) + "\033[0m")
-                print("\033[91m" + "IgnoreFlag:" + "\033[0m")
-                print("\033[91m" + str(IgnoreFlag) + "\033[0m")
                 if ser.is_open:
                     ser.close()
                     print("\033[94m" + "Serial connection closed" + "\033[0m")
