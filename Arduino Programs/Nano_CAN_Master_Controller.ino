@@ -4,13 +4,13 @@
 struct can_frame canControl;  // TX: Request status ping
 struct can_frame canMsg;      // RX: Any incoming CAN messages
 struct can_frame canGo;       // TX: "Go" signal to tell sensors to collect data
-MCP2515 mcp(10);          // Identify where the "CS" (aka "SS") pin is connected
+MCP2515 mcp(10);              // Identify where the "CS" (aka "SS") pin is connected
 
-int incomingByte;             // Variable for holding incoming serial data
+String incomingSerial;           // Variable for holding incoming serial data
 
 unsigned int starttime;
 unsigned int time;            // Variables to track time
-byte pingCount = 0;               // Count number of devices on CAN bus
+byte pingCount = 0;           // Count number of devices on CAN bus
 
 
 void setup() {
@@ -29,7 +29,7 @@ void setup() {
   Serial.println(F("Serial connection to PC initialized"));
   
   mcp.reset();
-  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ); // Set up the CAN module
+  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ); // Set up the CAN module
   mcp.setNormalMode();                    // Will not read its own messages
   delay(100);                             // Mandatory delay
   Serial.println(F("CAN Connection initialized"));
@@ -37,15 +37,14 @@ void setup() {
 
   // After startup, send a "ping" signal to figure out which other Arduinos are on the network
   Serial.println(F("Giving Arduinos time to boot up..."));
-  delay(5000);                           // First wait for all Arduinos to complete startup tests
+  delay(5500);                           // First wait for all Arduinos to complete startup tests
   mcp.sendMessage(&canControl);           // Then send message
   delay(10);
   Serial.println(F("Pinging CAN network..."));
   starttime = millis();
-
-  while (time <= 10000 + starttime){
+  while (time <= 2000 + starttime){
     if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-      Serial.print(F("Response from: "));
+      Serial.print(F("Response: "));
       Serial.write(canMsg.can_id); 
       Serial.write(0x20);
       if (canMsg.can_id == 0x5E){
@@ -67,13 +66,13 @@ void setup() {
   digitalWrite(13, HIGH);                         // Turn on built-in LED
   delay(100);
 
-  //mcp.sendMessage(&canGo);
+  //mcp.sendMessage(&canGo);                      // "Get data" request for debugging
 }
 
 void loop() {
   if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
     Serial.write(canMsg.can_id);     // Print ID as hex (for Python interpreter)
-    Serial.write(0x20);                 // "space" character instead of spacebar
+    //Serial.write(0x20);                 // "space" character instead of spacebar
     //Serial.print(char(canMsg.can_id));  // Print ID as character
     //Serial.print(" ");
     //Serial.print(canMsg.can_dlc, HEX);  // print message length
@@ -83,14 +82,14 @@ void loop() {
       //Serial.print(char(canMsg.data[0]));
       //Serial.print(" ");
       Serial.write(canMsg.data[0]);       // Print  as hex (for Python interpreter)
-      Serial.write(0x20);
+      //Serial.write(0x20);
     }
     else{
       for (int i = 0; i<canMsg.can_dlc; i++)  {  // Print the data for anything
         //Serial.print(canMsg.data[i], BIN);       // in binary for human
         //Serial.print(" ");
         Serial.write(canMsg.data[i]);       // (For Python interpreter)
-        Serial.write(0x20);
+        //Serial.write(0x20);
       }
     }
 
@@ -98,17 +97,20 @@ void loop() {
   }
 
 
-  if(Serial.available() > 0){             // If there is an incoming serial message from Python controller...
-  incomingByte = Serial.read();         // Store it as a variable...
+  while(Serial.available() != 0){               // If there is an incoming serial message from Python controller...
+    delay(10);
+    String incomingSerial = Serial.readStringUntil('\n');     // Store it as a variable...
 
-    if (incomingByte == -1){              // Check if there is actually any data...
-      goto srxErrOut;                        // If for some reason there isn't anything there, just move on
+    if (incomingSerial == -1){              // Check if there is actually any data...
+      Serial.println("error");
+      goto srxErrOut;                       // If for some reason there isn't anything there, just move on
     }
-    else if (char(incomingByte) == "G"){  // If it recieves the "Go" signal...
-      mcp.sendMessage(&canGo);            // Rebroadcast over CAN bus
-    }
-    else{                                 // Otherwise...
-      Serial.write(byte("?"));            // Tell the Python controller the commmand was unrecognized
+    else if (incomingSerial == "G"){        // If it recieves the "Go" signal...
+      mcp.sendMessage(&canGo);              // Rebroadcast over CAN bus
+    }      
+    else{                                   // Otherwise...
+      Serial.write(0x3F);                   // Tell the Python controller the commmand was unrecognized
+      Serial.write(0x0A);
     }
   }
   srxErrOut:                              // Serial RX Error Out "safe resume" point
