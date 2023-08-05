@@ -186,7 +186,7 @@ void setup() {
   Serial.println(F("Serial connection to PC initialized"));  //(F()) saves string to flash & keeps dynamic memory free
 
   mcp.reset();
-  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ);
+  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
   mcp.setNormalMode();
   delay(100);
   Serial.println(F("CAN Connection initialized"));
@@ -248,26 +248,37 @@ void loop() {
   if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
     if (canMsg.can_id == 0x7E && canMsg.can_dlc == 2){   // Listen for startup ping from master control unit
       mcp.sendMessage(&canStatus);                       // send back status
-      delay(5);
+      delay(10);
       Serial.println("ACK sent to master's ping (T)");
+      Serial.println();
     }
     else if (canMsg.can_id == 0x7E && canMsg.can_dlc == 1){  // Listen for "Go" message from master control
       go = true;
       // Read temperature sensors
+      /* From: https://files.seeedstudio.com/wiki/Grove-AHT20_I2C_Industrial_Grade_Temperature_and_Humidity_Sensor/AHT20-datasheet-2020-4-16.pdf
+      *  Section 5.4.3 says that each sensor takes 80ms to make a measurement. I am not sure if that is handled by the library,
+      *  but it seems to work just fine without extra delays in the code. Still, it will take longer and longer to read everything
+      *  the more sensors you add.
+      */ 
       for(int i = 0; i <= 7; i++){
         TCA70(i);                                          // Change multiplexer 0x70 to channel "i"
         sensors_event_t humidity, temp;                    // Tell the sensors to get data
-        delay(80);
+        //delay(80);
         aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send theie data
         tmps[i] = temp.temperature;                        // Store the data in the temperature data array
       }
       for(int i = 8; i <= 13; i++){
         TCA71(i - 8);                                      // Set multiplexer 0x71 to channel "i-8" to compensate for different loop start position
         sensors_event_t humidity, temp;                    // Tell the sensors to get data
-        delay(80);
+        //delay(80);
         aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send their data
         tmps[i] = temp.temperature;                        // Store the data in the temperature data array
       }
+      for(int i = 0; i <= 13; i ++){
+        Serial.print(tmps[i]);
+        Serial.print(" ");
+      }
+      Serial.println();
     }
     else if (canMsg.can_id == 0x5E && canMsg.data[0] == 0x53 && go == true){  // go=True condition to prevent spamming after Master's ping
       delay(5);
@@ -275,15 +286,18 @@ void loop() {
         I2B(long(tmps[i] * 1000), databytes);
         for(int o = 0; o < 4; o++){
           canData.data[o] = databytes[o];
+          Serial.print(databytes[o], BIN);
+          Serial.print(" ");
         }
+        Serial.println();
         mcp.sendMessage(&canData);
-        delay(5);
+        delay(10);
       }
       
       mcp.sendMessage(&canStatus);              // Then send terminator to signal end of data
-      delay(5);
-      Serial.println();
+      delay(10);
       Serial.println("Data sent over CAN");
+      Serial.println();
       go = false;
     }
   }
