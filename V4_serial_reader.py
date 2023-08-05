@@ -43,11 +43,10 @@ try:  # Main code runs here
             buffer = buffer[:-1]                                                          # Remove empty space bytes
             DataCount += 1                                                     # Keep track of how many bytes have arrived, since each byte has a space after it
             last_deletion = True
-        else:
-            last_deletion = False
 
         if DataCount == 5:
             DataCount = 0
+            last_deletion = False
 
         time.sleep(0)
 
