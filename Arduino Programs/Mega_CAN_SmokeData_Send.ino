@@ -50,7 +50,7 @@ void setup() {
   Serial.println(F("Serial connection to PC initialized"));
   
   mcp.reset();
-  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ);
+  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
   mcp.setNormalMode();
   delay(100);
   Serial.println(F("CAN Connection initialized"));
@@ -71,8 +71,9 @@ void loop() {
   if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
     if (canMsg.can_id == 0x7E && canMsg.can_dlc == 2){   // Listen for startup ping from master control unit
       mcp.sendMessage(&canStatus);                       // send back status
-      delay(5);
+      delay(10);
       Serial.println("ACK sent to master's ping (S)");
+      Serial.println();
     }
     else if (canMsg.can_id == 0x7E && canMsg.can_dlc == 1){  // Listen for "Go" message from master control
       go = true;
@@ -118,15 +119,15 @@ void loop() {
           canData.data[o] = databytes[o];         // Put data (as 4 bytes) into the CAN message...
         }
         mcp.sendMessage(&canData);                // And send the message
-        delay(5);                                 // Mandatory delay (minimum 4 ms)
-        Serial.print(smks[i]);
+        delay(10);                                 // Mandatory delay (minimum 4 ms)
+        Serial.print(smks[i], BIN);
         Serial.print(" ");
       }
       Serial.println();
       mcp.sendMessage(&canStatus);              // Then send terminator to signal end of data
-      delay(5);
-      Serial.println();
+      delay(10);
       Serial.println("Data sent over CAN");
+      Serial.println();
       go = false;
     }
   }
