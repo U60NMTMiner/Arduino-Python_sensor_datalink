@@ -71,8 +71,9 @@ void setup() {
 
 void loop() {
   if (mcp.readMessage(&canMsg) == MCP2515::ERROR_OK) {
-    Serial.write(canMsg.can_id);     // Print ID as hex (for Python interpreter)
-    //Serial.write(0x20);                 // "space" character instead of spacebar
+    if (canMsg.can_id != 0x5E){
+      Serial.write(canMsg.can_id);     // Print ID as hex (for Python interpreter)
+    } 
     //Serial.print(char(canMsg.can_id));  // Print ID as character
     //Serial.print(" ");
     //Serial.print(canMsg.can_dlc, HEX);  // print message length
@@ -81,19 +82,20 @@ void loop() {
     if (canMsg.can_id == 0x5E){                // Listen for data termination message
       //Serial.print(char(canMsg.data[0]));
       //Serial.print(" ");
-      Serial.write(canMsg.data[0]);       // Print  as hex (for Python interpreter)
-      //Serial.write(0x20);
+      //Serial.write(canMsg.data[0]);       // Print  as hex (for Python interpreter)
+      for(byte i = 0; i < 5; i ++){
+        Serial.write(0x7E);                 // Print a unique set of characters that data can never recreate
+      }
     }
     else{
       for (int i = 0; i<canMsg.can_dlc; i++)  {  // Print the data for anything
         //Serial.print(canMsg.data[i], BIN);       // in binary for human
         //Serial.print(" ");
         Serial.write(canMsg.data[i]);       // (For Python interpreter)
-        //Serial.write(0x20);
       }
     }
 
-    Serial.println();      // New line after entire CAN message has been recieved and passed through
+    //Serial.println();      // New line after entire CAN message has been recieved and passed through
   }
 
 
