@@ -8,7 +8,7 @@ import openpyxl as xl
 
 
 def B2I(in_bytes):                                            # Reconstructs 4 bytes of data into a long int
-    value = (in_bytes[0] << 24) | (in_bytes[1] << 16) | (in_bytes[2] << 8) | in_bytes[3]
+    value = (in_bytes[3] << 24) | (in_bytes[2] << 16) | (in_bytes[1] << 8) | in_bytes[0]
     return value
 
 
