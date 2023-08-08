@@ -28,31 +28,16 @@ try:  # Main code runs here
     x = 0
     time.sleep(2)
     ser.write(b"\x47")
-    DataCount = -1                                                                         # Tracks the number of bytes of raw data per 4 bytes
 
     while True:
         data = ser.read()                                                                 # As data comes in...
         buffer += data                                                                    # Put it into a buffer for short-term storage
         time.sleep(0)
 
-        if buffer.endswith(b"\r\n"):                                                      # Recreating my own "ser.read().strip()" function
-            buffer = buffer[:-2]                                                          # Only remove /r or /n if they appear directly next to each other
-            DataCount -= 2
-        # if buffer.endswith(b" ") and last_data != b" ":
-        #     buffer = buffer[:-1]                                                          # Remove empty space bytes
-        #     DataCount += 1                                                                # Keep track of how many bytes have arrived, since each byte has a space after it
-        # last_data = data
-
-        DataCount += 1
-        if DataCount == 5:
-            DataCount = 0
-
-        time.sleep(0)
-
-        if DataCount == 1 and (buffer.endswith(b"^T") or buffer.endswith(b"^A") or buffer.endswith(b"^S")):    # And if a terminating message comes in...
+        if buffer.endswith(b"~~~~~"):                                                     # And if the terminating message comes in...
             print(buffer)
-            SplitData = list(buffer)                                                      # Split up
-            if SplitData[0] == 65 and len(SplitData) == 117:                              # Check if it starts with 0x65 (DEC for "A") and make sure all of it is there
+            SplitData = list(buffer)                                                      # Split up into list items
+            if SplitData[0] == 65:  # and len(SplitData) == 117:                              # Check if it starts with 0x65 (DEC for "A") and make sure all of it is there
                 # rawAData = SplitData                                                    # If so, save the data as new, unique variable
                 cleanAData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
                 cleanAData = cleanAData[:-1]
@@ -77,8 +62,6 @@ try:  # Main code runs here
                 print(SplitData)
                 print("\033[91m" + "Last Buffer written:" + "\033[0m")
                 print(lastbuffer)
-                print("\033[91m" + "DataCount:" + "\033[0m")
-                print("\033[91m" + str(DataCount) + "\033[0m")
                 if ser.is_open:
                     ser.close()
                     print("\033[94m" + "Serial connection closed" + "\033[0m")
@@ -89,7 +72,7 @@ try:  # Main code runs here
             if x == 3:
                 time.sleep(4)  # x seconds
                 # print("enter anything to continue")
-                # anything = input()
+                # anything = input()       # For debug, force a pause until I've read and verified everything manually
                 print("Requesting new data:")
                 ser.write(b"\x47")
                 x = 0
