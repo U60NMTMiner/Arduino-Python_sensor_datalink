@@ -15,12 +15,11 @@ def B2I(in_bytes):                                            # Reconstructs 4 b
 now = datetime.datetime.now()                                  # Setting up info for timestamping
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"       # Setting up unique filename for exported data
 
-mainWB = xl.Workbook(write_only=True)
-Sheet1 = mainWB.create_sheet("Sheet1")
-Sheet2 = mainWB.create_sheet("Sheet2")
-headerRow = ["header"]
-Sheet2.append(headerRow)
-
+#mainWB = xl.Workbook(write_only=False)
+#Sheet1 = mainWB.create_sheet("Sheet1")
+#Sheet2 = mainWB.create_sheet("Sheet2")
+#headerRow = ["header"]
+#Sheet2.append(headerRow)
 
 n = 0                                                          # Start master index at 0
 
@@ -66,6 +65,7 @@ try:  # Main code runs here
                 for i in range(0, len(cleanAData), 4):
                     chunk = cleanAData[i:i+4]
                     convertedChunk = B2I(chunk)
+                    chunk = []
                     refinedAData.append(convertedChunk / 1000)
                 print(refinedAData)
             elif SplitData[0] == 83 and len(SplitData) == 470:                            # Check for DEC "S" for smoke data and make sure all of it is there
@@ -89,7 +89,7 @@ try:  # Main code runs here
                 x = 0                                                                     # Reset the count
                 if not BadData:                                                      # If the data was accepted, add it to the spreadsheet
                     current_time = time.time() - start_time  # Update clock
-                    Sheet2.append(current_time + cleanAData)
+                    #Sheet2.append(refinedAData)
 
         current_time = time.time() - start_time                                           # Update clock
         n += 1                                                                            # At the end of the loop, advance the master index
