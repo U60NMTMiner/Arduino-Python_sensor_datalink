@@ -44,7 +44,7 @@ void setup() {
   Serial.begin(1000000);
   
   mcp.reset();
-  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
+  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ);
   mcp.setNormalMode();
   delay(100);
 
@@ -163,7 +163,9 @@ void loop() {
 
       // The airspeed sensors should be the fastest, so they get to send their data first!
       for(int i = 0; i < 23; i++){                // For all 23 air velocity sensors...
-        I2B(long(wss[i] * 1000), databytes);      // Convert data from floats to bytes...
+        Serial.print(wss[i], 4);
+        Serial.print(" = ");
+        I2B(long(wss[i] * 10000), databytes);      // Convert data from floats to bytes...
         for(int o = 0; o < 4; o++){               // (Need 4 bytes to hold all data)
           canData.data[o] = databytes[o];         // Put data (as 4 bytes) into the CAN message...
           Serial.print(canData.data[o], BIN);
@@ -171,14 +173,13 @@ void loop() {
         }
         Serial.println();
         mcp.sendMessage(&canData);                // And send the message
-        delay(10);                                 // Mandatory delay (minimum 4 ms)
+        delay(7);                                 // Mandatory delay (minimum 4 ms)
       }
-      Serial.println();
       mcp.sendMessage(&canStatus);              // Then send terminator to signal end of data
       delay(10);
       Serial.println("Data sent over CAN");
+      Serial.println();
       go = false;
-
     }
   }
 }
