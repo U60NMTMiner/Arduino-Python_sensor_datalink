@@ -26,13 +26,13 @@ void setup() {
 
 
   Serial.begin(1000000);  // Use fastest baud rate that the Pi can support for max data thruput
-  Serial.println(F("Serial connection to PC initialized"));
+  Serial.println(F("Serial connection to PC initialized at 1000000 Baud"));
   
   mcp.reset();
-  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ); // Set up the CAN module
+  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ); // Set up the CAN module
   mcp.setNormalMode();                    // Will not read its own messages
   delay(100);                             // Mandatory delay
-  Serial.println(F("CAN Connection initialized"));
+  Serial.println(F("CAN Connection initialized at 1000KBps"));
 
 
   // After startup, send a "ping" signal to figure out which other Arduinos are on the network
@@ -65,6 +65,7 @@ void setup() {
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);                         // Turn on built-in LED
   delay(100);
+  Serial.flush();                                 // Make sure all the stuff is done sending
 
   //mcp.sendMessage(&canGo);                      // "Get data" request for debugging
 }
@@ -96,6 +97,7 @@ void loop() {
     }
 
     //Serial.println();      // New line after entire CAN message has been recieved and passed through
+    Serial.flush();          // Wait for all data in the serial TX buffer to be sent before continuing
   }
 
 
@@ -112,9 +114,12 @@ void loop() {
     }      
     else{                                   // Otherwise...
       Serial.write(0x3F);                   // Tell the Python controller the commmand was unrecognized
-      Serial.write(0x0A);
+      Serial.write(0x3F);
+      Serial.write(0x3F);
+      Serial.write(0x3F);
+      Serial.write(0x3F);
     }
   }
-  srxErrOut:                              // Serial RX Error Out "safe resume" point
+  srxErrOut:                              // Serial RX Error "safe resume" point
   delay(0);
 }
