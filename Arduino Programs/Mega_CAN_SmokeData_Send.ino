@@ -50,7 +50,7 @@ void setup() {
   Serial.println(F("Serial connection to PC initialized"));
   
   mcp.reset();
-  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
+  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ);
   mcp.setNormalMode();
   delay(100);
   Serial.println(F("CAN Connection initialized"));
@@ -119,7 +119,7 @@ void loop() {
           canData.data[o] = databytes[o];         // Put data (as 4 bytes) into the CAN message...
         }
         mcp.sendMessage(&canData);                // And send the message
-        delay(10);                                 // Mandatory delay (minimum 4 ms)
+        delay(7);                                 // Mandatory delay (minimum 4 ms)
         Serial.print(smks[i], BIN);
         Serial.print(" ");
       }
