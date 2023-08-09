@@ -102,7 +102,7 @@ try:  # Main code runs here
                     Header = True
 
                 if not BadData:                                                           # If the data was accepted, add it to the spreadsheet
-                    ExportList = [int(current_time)] + AirFlowData + refinedAData + refinedSData + refinedTData
+                    ExportList = [int(current_time)] + AirFlowData + refinedAData + refinedTData + refinedSData
                     datasheet.append(ExportList)
                 BadData = False                                                           # Reset data integrity tracker
 
