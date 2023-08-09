@@ -38,7 +38,7 @@ try:  # Main code runs here
             break
         else:
             print(intro)
-    del intro
+    del intro                                                                             # Remove the string from memory to keep space free
     x = 0
     time.sleep(1)
     start_time = time.time()                                                              # Record starting time for data indexing
@@ -52,59 +52,58 @@ try:  # Main code runs here
         buffer += data                                                                    # Put it into a buffer for short-term storage
 
         if buffer.endswith(b"?????"):                                                     # Check if the Arduino returned an error
-            print("\033[91m" + "Warning: Message to Arduino was not recognized" + "\033[0m")
+            print("\033[91m" + "Warning: Nano pass-thru returned an error" + "\033[0m")
             buffer = b""                                                                  # If so, make sure to reset the buffer
             time.sleep(1)
 
-        if buffer.endswith(b"~~~~~"):                                                     # And if the terminating message comes in...
-            SplitData = list(buffer)                                                      # Split up into list items
+        if buffer.endswith(b"~~~~~"):                                                     # And if the terminating symbol comes in...
+            SplitData = list(buffer)                                                      # Split up the byte array into list items that are easier to work with
             if SplitData[0] == 65 and len(SplitData) == 120:                              # Check if it starts with 0x65 (DEC for "A" for airspeed) and make sure all of it is there
-                cleanAData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
+                cleanAData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
                 cleanAData = cleanAData[:-4]                                              # Remove the last remaining bit of the 5-character terminator symbol
                 for i in range(0, len(cleanAData), 4):
-                    convertedChunk = B2I(cleanAData[i:i+4])
-                    refinedAData.append(convertedChunk / 10000)
+                    convertedChunk = B2I(cleanAData[i:i+4])                               # Convert the data from binary to integers, in blocks of 4 bytes
+                    refinedAData.append(convertedChunk / 10000)                           # Convert integer to float using the opposite operation as the Arduino Mega made
                 print(refinedAData)
                 AirFlowData = [airspeed * 0.00112903 for airspeed in refinedAData]        # Spin off a new list for airflow by multiplying by cross-sectional area
 
             elif SplitData[0] == 83 and len(SplitData) == 470:                            # Check for DEC "S" for smoke data and make sure all of it is there
-                cleanSData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
+                cleanSData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
                 cleanSData = cleanSData[:-4]                                              # Remove the last of the 5-character terminator symbol
                 for i in range(0, len(cleanSData), 4):
-                    convertedChunk = B2I(cleanSData[i:i+4])
-                    refinedSData.append(convertedChunk)
+                    convertedChunk = B2I(cleanSData[i:i+4])                               # Convert the data from binary to integers, in blocks of 4 bytes
+                    refinedSData.append(convertedChunk)                                   # No need to convert to float here, it is intended to be an integer
                 print(refinedSData)
 
-            elif SplitData[0] == 84 and len(SplitData) == 450:                             # Check for DEC "T" for temperature data and make sure all of it is there
-                cleanTData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]
+            elif SplitData[0] == 84 and len(SplitData) == 450:                            # Check for DEC "T" for temperature data and make sure all of it is there
+                cleanTData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
                 cleanTData = cleanTData[:-4]                                              # Remove the last of the 5-character terminator symbol
                 for i in range(0, len(cleanTData), 4):
-                    convertedChunk = B2I(cleanTData[i:i+4])
-                    refinedTData.append(convertedChunk / 10000)
+                    convertedChunk = B2I(cleanTData[i:i+4])                               # Convert the data from binary to integers, in blocks of 4 bytes
+                    refinedTData.append(convertedChunk / 10000)                           # Convert integer to float using the opposite operation as the Arduino Mega made
                 print(refinedTData)
 
             else:
                 print("\033[93m" + "Warning: Bad serial TX/RX. Suspected bad data set dumped." + "\033[0m")
-                BadData = True
+                BadData = True                                                            # If something isn't quite right about the data, don't let it get saved to the spreadsheet later
 
             buffer = b""                                                                  # Purge buffer for next set of incoming data
             x += 1
             if x == 3:                                                                    # And after all 3 sets of data have arrived...
                 x = 0                                                                     # Reset the count
                 current_time = time.time() - start_time                                   # Check the time
-                print("Timestamp: " + str(int(current_time)) + " seconds")                # Show timestamp
+                print("Timestamp: " + str(int(current_time)) + " seconds")                # Print timestamp for user
                 print()
 
-                if not Header:                                                                # If this is the first iteration of the loop...
+                if not Header:                                                            # If the spreadsheet was not already given a header...
                     HeaderList = ["Time (seconds)"] + ["Airflow (m3/s)" for _ in AirFlowData] + ["Air Velocity (m/s)" for _ in refinedAData] + ["Temperature (C)" for _ in refinedTData] + ["Gas (ppm)" for _ in refinedSData]
-
-                    datasheet.append(HeaderList)
+                    datasheet.append(HeaderList)                                          # Create one based on the amount of data being received
                     Header = True
 
-                if not BadData:                                                           # If the data was accepted, add it to the spreadsheet
+                if not BadData:                                                           # If the data was acceptable, add it to the spreadsheet
                     ExportList = [int(current_time)] + AirFlowData + refinedAData + refinedTData + refinedSData
                     datasheet.append(ExportList)
-                BadData = False                                                           # Reset data integrity tracker
+                BadData = False                                                           # Reset data integrity flag for next set of incoming data
 
                 while current_time - last_time < 10:                                      # Regardless of how long it takes data to come in, make sure there is a constant timing
                     time.sleep(0.1)
@@ -114,7 +113,7 @@ try:  # Main code runs here
                 refinedAData, refinedTData, refinedSData = [], [], []                     # Make room for new data decoding
                 cleanAData, cleanTData, cleanSData = [], [], []
                 print("Requesting new data...")
-                ser.write(b"\x47")                                                        # Send the "request data" command
+                ser.write(b"\x47")                                                        # Send the "request data" command to the Nano
 
         current_time = time.time() - start_time                                           # Update clock
         n += 1                                                                            # At the end of the loop, advance the master index
