@@ -1,13 +1,13 @@
 #include <Wire.h>                // Standard i2c communication library
 #include <Adafruit_AHTX0.h>      // Tempurature and humidity sensor library
+#include <CD74HC4067.h>
 
 byte error = 0;  // Variable for status LEDs
-int i = 0;       // Variable for for-loop indexing
 
-float tmps[14]; // Array storage of sensor values. [Assuming 14 sensors]
+float tmps[128]; // Array storage of sensor values. [Assuming 89 sensors]
 
 
-/* Technically, there should be 14 sensor initializations for 14 sensors,
+/* Technically, there should be 89 sensor initializations for 89 sensors,
  * but since we aren't using the sensors' names to pull data from them,
  * I just define one name and use the multiplex array to select the sensor
  * I want.
@@ -24,6 +24,9 @@ struct can_frame canStatus; // Structure for signaling end of data
 struct can_frame canMsg;    // Structure for incomming messages
 MCP2515 mcp(53);
 bool go = false;
+
+CD74HC4067 muxE(4, 5, 6, 7);  // Telling the library where to find the multiplexer control pins
+CD74HC4067 muxF(11, 10, 9, 8);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function to convert an long integer into 4 bytes
@@ -168,7 +171,161 @@ void MuxRst(){
   Wire.endTransmission();
 }
 
-
+// Function to loop through every sensor on the array
+void TCAScan(String scantype){ // Use "Ping" or "Scan"
+  if(scantype == "Ping"){
+    for(int a = 0; a < 2; a ++){
+      muxE.channel(a + 14);
+      muxF.channel(a + 14);
+      for(int i = 0; i <= 7; i++){
+        TCA70(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x70/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x70/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA71(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x71/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x71/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA72(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x72/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x72/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA73(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x73/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x73/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA74(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x74/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x74/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA75(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x75/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x75/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA76(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x76/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x76/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA77(i);                 
+        delay(10);
+        if (! aht00.begin()) {    
+          Serial.print("! Disconnected AHT20 on 0x77/ch"); Serial.println(i);
+        }
+        else{
+          Serial.print("AHT20 0x77/ch"); Serial.print(i); Serial.println(" active");
+        }
+        delay(10);
+      }
+    }
+  }
+  else if(scantype == "Scan"){
+    for(int a = 0; a < 2; a ++){
+      muxE.channel(a + 14);
+      muxF.channel(a + 14);
+      for(int i = 0; i <= 7; i++){
+        TCA70(i);                 
+        sensors_event_t humidity, temp;                    // Tell the sensors to get data
+        aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send theie data
+        tmps[i + (a * 64)] = temp.temperature;             // Store the data in the temperature data array
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA71(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 1 + (7 * 1)) + (a * 64)] = temp.temperature;      
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA72(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 2 + (7 * 2)) + (a * 64)] = temp.temperature;  
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA73(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 3 + (7 * 3)) + (a * 64)] = temp.temperature;  
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA74(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 4 + (7 * 4)) + (a * 64)] = temp.temperature;
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA75(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 5 + (7 * 5)) + (a * 64)] = temp.temperature;
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA76(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 6 + (7 * 6)) + (a * 64)] = temp.temperature;
+      }
+      for(int i = 0; i <= 7; i++){
+        TCA77(i);                 
+        sensors_event_t humidity, temp;  
+        aht00.getEvent(&humidity, &temp);
+        tmps[(i + 7 + (7 * 7)) + (a * 64)] = temp.temperature;
+      }
+    }
+  }
+  else{
+    Serial.println("Error, invalid scan type parameter.");
+    while(true);
+  }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
@@ -186,7 +343,7 @@ void setup() {
   Serial.println(F("Serial connection to PC initialized"));  //(F()) saves string to flash & keeps dynamic memory free
 
   mcp.reset();
-  mcp.setBitrate(CAN_500KBPS, MCP_8MHZ);
+  mcp.setBitrate(CAN_1000KBPS, MCP_8MHZ);
   mcp.setNormalMode();
   delay(100);
   Serial.println(F("CAN Connection initialized"));
@@ -204,42 +361,9 @@ void setup() {
   Serial.println(F("Performing AHT20 startup test..."));
   delay(20);                                                                          // Sensors need 20ms to initialize after powerup
 
-  Serial.println(F("Multiplexer 0x70:"));
-  for(int i = 0; i <= 7; i++){                                                        // 8 sensors on 0x70
-    TCA70(i);                                                                         // Set multiplexer 0x70 to channel "i"
-    delay(10);
-    if (! aht00.begin()) {                                                            // Check for a response from any of the AHT20 sensors
-      Serial.print("! Disconnected AHT20 on 0x70/ch"); Serial.println(i);
-    }
-    else{
-      Serial.print("AHT20 0x70/ch"); Serial.print(i); Serial.println(" active");
-    }
-    delay(50);
-  }
+  TCAScan("Ping");
   delay(100);
-  Serial.println(F("Multiplexer 0x71:"));
-  for(int i = 0; i <= 5; i++){                                                        // 6 sensors on 0x71
-    TCA71(i);                                                                         // Set multiplexer 0x71 to channel "i"
-    delay(10);
-    if (! aht00.begin()) {
-      Serial.print("! Disconnected AHT20 on 0x71/ch"); Serial.println(i);
-    }
-    else{
-      Serial.print("AHT20 0x71/ch"); Serial.print(i); Serial.println(" active");
-    }
-    delay(50);
-  }
-  for(int i = 6; i <= 7; i++){                                                        // Make sure no extras are unintentionally plugged in
-    TCA71(i);
-    delay(10);
-    if (! aht00.begin()) {
-      Serial.print("AHT20 0x71/ch"); Serial.print(i); Serial.println(" empty");
-    }
-    else{
-      Serial.print("! Unexpected AHT20 on 0x71/ch"); Serial.println(i);
-    }
-    delay(50);
-  }
+  
   Serial.println(F("AHT20 Startup complete"));
   Serial.println();
 }
@@ -260,21 +384,8 @@ void loop() {
       *  but it seems to work just fine without extra delays in the code. Still, it will take longer and longer to read everything
       *  the more sensors you add.
       */ 
-      for(int i = 0; i <= 7; i++){
-        TCA70(i);                                          // Change multiplexer 0x70 to channel "i"
-        sensors_event_t humidity, temp;                    // Tell the sensors to get data
-        //delay(80);
-        aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send theie data
-        tmps[i] = temp.temperature;                        // Store the data in the temperature data array
-      }
-      for(int i = 8; i <= 13; i++){
-        TCA71(i - 8);                                      // Set multiplexer 0x71 to channel "i-8" to compensate for different loop start position
-        sensors_event_t humidity, temp;                    // Tell the sensors to get data
-        //delay(80);
-        aht00.getEvent(&humidity, &temp);                  // Tell the sensors to send their data
-        tmps[i] = temp.temperature;                        // Store the data in the temperature data array
-      }
-      for(int i = 0; i <= 13; i ++){
+      TCAScan("Scan");
+      for(int i = 0; i < 89; i ++){
         Serial.print(tmps[i]);
         Serial.print(" ");
       }
@@ -282,8 +393,8 @@ void loop() {
     }
     else if (canMsg.can_id == 0x5E && canMsg.data[0] == 0x53 && go == true){  // go=True condition to prevent spamming after Master's ping
       delay(5);
-      for (int i = 0; i <= 13; i++){
-        I2B(long(tmps[i] * 1000), databytes);
+      for (int i = 0; i < 89; i++){
+        I2B(long(tmps[i] * 10000), databytes);
         for(int o = 0; o < 4; o++){
           canData.data[o] = databytes[o];
           Serial.print(databytes[o], BIN);
@@ -291,11 +402,12 @@ void loop() {
         }
         Serial.println();
         mcp.sendMessage(&canData);
-        delay(10);
+        delay(7);
+        Serial.flush();
       }
       
       mcp.sendMessage(&canStatus);              // Then send terminator to signal end of data
-      delay(10);
+      delay(7);
       Serial.println("Data sent over CAN");
       Serial.println();
       go = false;
