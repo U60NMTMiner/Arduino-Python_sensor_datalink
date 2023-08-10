@@ -1,0 +1,12 @@
+150 Watt power supply: https://www.meanwell-web.com/content/files/pdfs/productPdfs/MW/LRS-150F/LRS-150F-spec.pdf
+Hot Wire Airspeed sensors: https://moderndevice.com/products/wind-sensor-rev-p?variant=42521581224178, https://moderndevice.com/blogs/documentation/calibrating-the-rev-p-wind-sensor-from-a-new-regression
+High Velocity 2-stage Fan: https://www.mouser.com/datasheet/2/632/GFC0412DS-DV17(REV01)-595333.pdf
+AHT20 Temperature sensors: https://files.seeedstudio.com/wiki/Grove-AHT20_I2C_Industrial_Grade_Temperature_and_Humidity_Sensor/AHT20-datasheet-2020-4-16.pdf
+MQ-2 Gas sensors: https://www.mouser.com/datasheet/2/321/605-00008-MQ-2-Datasheet-370464.pdf
+i2c Multiplexer: https://www.adafruit.com/product/2717
+Analog Multiplexer: https://www.sparkfun.com/datasheets/IC/cd74hc4067.pdf
+CAN bus modules: https://lastminuteengineers.com/mcp2515-can-module-arduino-tutorial/#:~:text=TJA1050%20Datasheet-,MCP2515%20Module%20Pinout,-Now%20let%E2%80%99s%20have
+
+DC Current wire size calculator: https://www.omnicalculator.com/physics/dc-wire-size
+
+Sensosr layout: https://docs.google.com/presentation/d/1iU9-4sDkxN5r5blLVAVAElmQhg7pdddcT2UxLzKhD1Q/edit?usp=sharing
