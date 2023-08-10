@@ -1,0 +1,10 @@
+General Arduino Reference: https://www.arduino.cc/reference/en/
+
+Sending/Reciving Serial Messages in Python: https://pyserial.readthedocs.io/en/latest/pyserial_api.html
+Interacting with Spreadsheets: https://openpyxl.readthedocs.io/en/stable/index.html
+Interacting with Large Spreadsheets: https://openpyxl.readthedocs.io/en/stable/optimized.html#write-only-mode
+
+Medium-Term Data Storage: https://pandas.pydata.org/docs/user_guide/10min.html
+
+Possible GUI/User Interface: https://github.com/hoffstadt/DearPyGui, https://dearpygui.readthedocs.io/en/latest/tutorials/first-steps.html
+Possible GUI/User Interface: https://www.pygame.org/docs/
