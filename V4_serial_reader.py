@@ -2,7 +2,8 @@ import datetime
 import time
 import serial
 import sys
-import os
+import select
+# import os
 import openpyxl as xl
 # import pandas as pd
 
@@ -10,6 +11,15 @@ import openpyxl as xl
 def B2I(in_bytes):                                            # Reconstructs 4 bytes of data into a long int
     value = (in_bytes[0] << 24) | (in_bytes[1] << 16) | (in_bytes[2] << 8) | in_bytes[3]
     return value
+
+
+def InputTimeout(prompt, timeout):
+    prompt_time = time.time()
+    while time.time() - prompt_time < timeout:
+        print(prompt, end='', flush=True)
+        if sys.stdin in select.select([sys.stdin], [], [], timeout)[0]:
+            return sys.stdin.readline().strip()
+    return None
 
 
 now = datetime.datetime.now()                                  # Setting up info for timestamping
@@ -22,8 +32,7 @@ datasheet = mainWB.create_sheet("Data")                        # Name the sheet 
 n = 0                                                          # Start master index at 0
 
 ser = serial.Serial('/dev/ttyUSB0', 1000000)                   # Open serial port
-data = b""
-buffer = b""
+buffer, data = b"", b""
 BadData = False                                                # Initializing variables during startup
 Header = False
 cleanAData, cleanTData, cleanSData = [], [], []
@@ -41,10 +50,30 @@ try:  # Main code runs here
     del intro                                                                             # Remove the string from memory to keep space free
     x = 0
     time.sleep(1)
+
+    print()
+    print()
+    print("Mode " + "\033[32m" + "1" + "\033[0m" + ": Save at End (default)")
+    print("Mode " + "\033[32m" + "2" + "\033[0m" + ": Save Iteratively")
+    SetMode = InputTimeout("Enter the number of your selection: ", 10)      # Should the program save every time or just once at the end?
+    if SetMode is not None:
+        if SetMode == "1":
+            print("Running in default mode.")
+        elif SetMode == "2":
+            print("Running in iterative save mode. (You may see reduced performance)")
+        else:
+            print("Mode selection not recognized, setting to default")
+    else:
+        print("Timed out. Running in default mode.")
+        SetMode = 1
+    print()
+    print()
+
     start_time = time.time()                                                              # Record starting time for data indexing
     ser.write(b"\x47")                                                                    # Request first data set
     current_time = time.time() - start_time
     print("Startup time: " + str(current_time))
+
     last_time = current_time
 
     while True:
@@ -52,7 +81,7 @@ try:  # Main code runs here
         buffer += data                                                                    # Put it into a buffer for short-term storage
 
         if buffer.endswith(b"?????"):                                                     # Check if the Arduino returned an error
-            print("\033[91m" + "Warning: Nano pass-thru returned an error" + "\033[0m")
+            print("\033[93m" + "Warning: Nano pass-thru returned an error" + "\033[0m")
             buffer = b""                                                                  # If so, make sure to reset the buffer
             time.sleep(1)
 
@@ -84,7 +113,7 @@ try:  # Main code runs here
                 print(refinedTData)
 
             else:
-                print("\033[93m" + "Warning: Bad serial TX/RX. Suspected bad data set dumped." + "\033[0m")
+                print("\033[93m" + "Warning: Bad serial TX/RX. Suspected bad data set will be dumped." + "\033[0m")
                 BadData = True                                                            # If something isn't quite right about the data, don't let it get saved to the spreadsheet later
 
             buffer = b""                                                                  # Purge buffer for next set of incoming data
@@ -103,15 +132,27 @@ try:  # Main code runs here
                 if not BadData:                                                           # If the data was acceptable, add it to the spreadsheet
                     ExportList = [int(current_time)] + AirFlowData + refinedAData + refinedTData + refinedSData
                     datasheet.append(ExportList)
+                elif BadData:
+                    print("\033[93m" + "Suspected bad data set was dumped." + "\033[0m")
                 BadData = False                                                           # Reset data integrity flag for next set of incoming data
+
+                refinedAData, refinedTData, refinedSData = [], [], []                     # Make room for new data decoding
+                cleanAData, cleanTData, cleanSData = [], [], []
+
+                if SetMode == "2":
+                    mainWB.save(filename)                                                 # Save the spreadsheet
+                    mainWB.close()
+                    mainWB = xl.load_workbook(filename=filename)                          # Re-load the spreadsheet
+                    datasheet = mainWB["Data"]
+                    print("Spreadsheet updated.")
 
                 while current_time - last_time < 10:                                      # Regardless of how long it takes data to come in, make sure there is a constant timing
                     time.sleep(0.1)
                     current_time = time.time() - start_time
-                last_time = current_time
+                    print('.', end='')
 
-                refinedAData, refinedTData, refinedSData = [], [], []                     # Make room for new data decoding
-                cleanAData, cleanTData, cleanSData = [], [], []
+                last_time = current_time
+                print()
                 print("Requesting new data...")
                 ser.write(b"\x47")                                                        # Send the "request data" command to the Nano
 
@@ -122,14 +163,19 @@ try:  # Main code runs here
 except KeyboardInterrupt:                                                                 # Gracefully save data and shut down the program instead of crashing
     print("\033[93m" + "[Keyboard interrupt]" + "\033[0m")
     if ser.is_open:
-        ser.close()                                                                        # Close the serial connection
+        ser.close()                                                                       # Close the serial connection
         print("\033[94m" + "Serial connection closed" + "\033[0m")
-    print("Saving excel file")
-    mainWB.save(filename)                                                                  # Save the spreadsheet
-    mainWB.close()
+
+    try:
+        print("Saving spreadsheet...")
+        mainWB.save(filename)                                                             # Save the spreadsheet
+        mainWB.close()
+        print("Spreadsheet saved: " + "\033[32m" + "/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename + "\033[0m")
+    except FileNotFoundError:                                                             # ... Unless it was already saved
+        print("Spreadsheet was already saved: " + "\033[32m" + "/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename + "\033[0m")
 
     # os.remove("/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename)  # For testing, don't save spreadsheets
     # print("File deleted")
 
     print("Exiting program")
-    sys.exit(0)                                                                            # Show "success" exit code
+    sys.exit(0)                                                                           # Show "success" exit code
