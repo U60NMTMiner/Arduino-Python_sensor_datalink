@@ -3,9 +3,8 @@ import time
 import serial
 import sys
 import select
-# import os
+import os
 import openpyxl as xl
-# import pandas as pd
 
 
 def B2I(in_bytes):                                            # Reconstructs 4 bytes of data into a long int
@@ -21,6 +20,31 @@ def InputTimeout(prompt, timeout):
             return sys.stdin.readline().strip()
     return None
 
+
+# Once the sensors have been installed and wired into the multiplexer arrays, coordinate locations will be assigned here
+# Sensor layout and coordinate system are defined here: https://docs.google.com/presentation/d/1iU9-4sDkxN5r5blLVAVAElmQhg7pdddcT2UxLzKhD1Q/edit?usp=sharing
+Airspeed_Sensor_Coordinates = ["00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                               "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00"]
+Gas_Sensor_Coordinates = ["00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                          "00-00", "00-00", "00-00"]
+Temperature_Sensor_Coordinates = ["00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00",
+                                  "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00", "00-00"]
 
 now = datetime.datetime.now()                                  # Setting up info for timestamping
 filename = now.strftime("%Y-%m-%d_%H-%M") + "_data.xlsx"       # Setting up unique filename for exported data
@@ -125,9 +149,12 @@ try:  # Main code runs here
                 print()
 
                 if not Header:                                                            # If the spreadsheet was not already given a header...
-                    HeaderList = ["Time (seconds)"] + ["Airflow (m3/s)" for _ in AirFlowData] + ["Air Velocity (m/s)" for _ in refinedAData] + ["Temperature (C)" for _ in refinedTData] + ["Gas (ppm)" for _ in refinedSData]
+                    HeaderList = [str(filename)] + ["Airflow (m^3/s)" for _ in AirFlowData] + ["Air Velocity (m/s)" for _ in refinedAData] + ["Temperature (C)" for _ in refinedTData] + ["Gas (ppm)" for _ in refinedSData]
                     datasheet.append(HeaderList)                                          # Create one based on the amount of data being received
-                    Header = True
+                    HeaderList = ["Time (seconds)"] + Airspeed_Sensor_Coordinates + Airspeed_Sensor_Coordinates + Temperature_Sensor_Coordinates + Gas_Sensor_Coordinates
+                    datasheet.append(HeaderList)
+                    del HeaderList                                                        # Clean up memory
+                    Header = True                                                         # Now it has a header
 
                 if not BadData:                                                           # If the data was acceptable, add it to the spreadsheet
                     ExportList = [int(current_time)] + AirFlowData + refinedAData + refinedTData + refinedSData
@@ -174,8 +201,12 @@ except KeyboardInterrupt:                                                       
     except FileNotFoundError:                                                             # ... Unless it was already saved
         print("Spreadsheet was already saved: " + "\033[32m" + "/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename + "\033[0m")
 
-    # os.remove("/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename)  # For testing, don't save spreadsheets
-    # print("File deleted")
-
-    print("Exiting program")
+    final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet:")
+    if final == "del":
+        os.remove("/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename)
+        print("File deleted.")
+        time.sleep(2.5)
+    else:
+        print("Exiting program.")
+        time.sleep(2.5)
     sys.exit(0)                                                                           # Show "success" exit code
