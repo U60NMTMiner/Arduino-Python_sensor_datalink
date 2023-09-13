@@ -35,11 +35,13 @@ Reasons: In either case, its only temporarily useful.
 filename = f'{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")}_data.xlsx'  # Set up unique filename for exported data
 mainWB = xl.Workbook()  # Create spreadsheet to store data
 datasheet = mainWB.create_sheet("Data")  # Name the sheet we want to work on
-del mainWB["sheet"]  # Delete artifact (only need it when not using write_only mode)
+
+
+##del mainWB["sheet"]  # Delete artifact (only need it when not using write_only mode)
 
 
 # Convert bytes to integers
-def bytes_to_int(in_bytes):                                            # Reconstructs 4 bytes of data into a long int
+def bytes_to_int(in_bytes):  # Reconstructs 4 bytes of data into a long int
     value = (in_bytes[0] << 24) | (in_bytes[1] << 16) | (in_bytes[2] << 8) | in_bytes[3]
     return value
 
@@ -143,33 +145,45 @@ def readData(serialConnection, sessionData, refinedData):
         AirFlowData = []
 
         # Check if Airflow data
-        if SplitData[0] == 65 and len(SplitData) == 120:  # Check if it starts with 0x65 (DEC for "A" for airspeed) and make sure all of it is there
-            cleanAData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
+        if SplitData[0] == 65 and len(
+                SplitData) == 120:  # Check if it starts with 0x65 (DEC for "A" for airspeed) and make sure all of it is there
+            cleanAData = [item for index, item in enumerate(SplitData) if
+                          (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
             cleanAData = cleanAData[:-4]  # Remove the last remaining bit of the 5-character terminator symbol
             for i in range(0, len(cleanAData), 4):
-                convertedChunk = bytes_to_int(cleanAData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
-                refinedAData.append(convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
+                convertedChunk = bytes_to_int(
+                    cleanAData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
+                refinedAData.append(
+                    convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
             print(refinedAData)
             refinedData['a'].append(refinedAData)
-            AirFlowData = [airspeed * 0.00112903 for airspeed in refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
+            AirFlowData = [airspeed * 0.00112903 for airspeed in
+                           refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
 
         # Check if Smoke data
-        elif SplitData[0] == 83 and len(SplitData) == 470:  # Check for DEC "S" for smoke data and make sure all of it is there
-            cleanSData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
+        elif SplitData[0] == 83 and len(
+                SplitData) == 470:  # Check for DEC "S" for smoke data and make sure all of it is there
+            cleanSData = [item for index, item in enumerate(SplitData) if
+                          (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
             cleanSData = cleanSData[:-4]  # Remove the last of the 5-character terminator symbol
             for i in range(0, len(cleanSData), 4):
-                convertedChunk = bytes_to_int(cleanSData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
+                convertedChunk = bytes_to_int(
+                    cleanSData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 refinedSData.append(convertedChunk)  # No need to convert to float here, it is intended to be an integer
             print(refinedSData)
             refinedData['s'].append(refinedSData)
 
         # Check if Temperature data
-        elif SplitData[0] == 84 and len(SplitData) == 450:  # Check for DEC "T" for temperature data and make sure all of it is there
-            cleanTData = [item for index, item in enumerate(SplitData) if (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
+        elif SplitData[0] == 84 and len(
+                SplitData) == 450:  # Check for DEC "T" for temperature data and make sure all of it is there
+            cleanTData = [item for index, item in enumerate(SplitData) if
+                          (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
             cleanTData = cleanTData[:-4]  # Remove the last of the 5-character terminator symbol
             for i in range(0, len(cleanTData), 4):
-                convertedChunk = bytes_to_int(cleanTData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
-                refinedTData.append(convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
+                convertedChunk = bytes_to_int(
+                    cleanTData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
+                refinedTData.append(
+                    convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
             print(refinedTData)
             refinedData['t'].append(refinedTData)
 
@@ -280,3 +294,7 @@ def main():
             print("Exiting program.")
 
     sys.exit(0)  # Show "success" exit code
+
+
+if __name__ == "__main__":
+    main()
