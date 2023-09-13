@@ -157,7 +157,7 @@ def readData(serialConnection, sessionData, refinedData):
                 refinedAData.append(v)  # Convert integer to float using the opposite operation as the Arduino Mega made
                 print(convertedChunk / 10000)
                 AirFlowData.append(v * 0.00112903)
-            print(refinedAData)
+            # print(refinedAData)
             refinedData['a'].append(refinedAData)
             refinedData['AirFlow'].append(AirFlowData)
             # AirFlowData = [airspeed * 0.00112903 for airspeed in refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
@@ -223,6 +223,11 @@ def readData(serialConnection, sessionData, refinedData):
                               + refinedData['a']
                               + refinedData['t']
                               + refinedData['s'])
+
+                print(f'Refined Data A: {refinedData["a"]}\n'
+                      f'Refined Data T: {refinedData["t"]}\n'
+                      f'Refined Data S: {refinedData["s"]}\n'
+                      f'ExportList: {ExportList}')
                 datasheet.append(ExportList)
             elif BadData:
                 print("\033[93m" + "Suspected bad data set was dumped." + "\033[0m")
