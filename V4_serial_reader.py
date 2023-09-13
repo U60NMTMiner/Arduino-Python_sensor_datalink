@@ -84,7 +84,7 @@ try:  # Main code runs here
         if SetMode == "1":
             print("Running in default mode.")
         elif SetMode == "2":
-            print("Running in iterative save mode. (You may see reduced performance)")
+            print("Running in iterative save mode. (You may see increased memory usage)")
         else:
             print("Mode selection not recognized, setting to default")
     else:
@@ -107,6 +107,7 @@ try:  # Main code runs here
         if buffer.endswith(b"?????"):                                                     # Check if the Arduino returned an error
             print("\033[93m" + "Warning: Nano pass-thru returned an error" + "\033[0m")
             buffer = b""                                                                  # If so, make sure to reset the buffer
+            BadData = True
             time.sleep(1)
 
         if buffer.endswith(b"~~~~~"):                                                     # And if the terminating symbol comes in...
@@ -201,7 +202,7 @@ except KeyboardInterrupt:                                                       
     except FileNotFoundError:                                                             # ... Unless it was already saved
         print("Spreadsheet was already saved: " + "\033[32m" + "/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename + "\033[0m")
 
-    final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet:")
+    final = InputTimeout("Print 'del' to delete the spreadsheet. Do nothing for 10 seconds or enter anything else to keep the spreadsheet:", 10)
     if final == "del":
         os.remove("/home/simrigcontrol/PycharmProjects/Arduino-Python_sensor_datalink/" + filename)
         print("File deleted.")
