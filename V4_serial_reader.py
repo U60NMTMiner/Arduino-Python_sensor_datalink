@@ -153,12 +153,13 @@ def readData(serialConnection, sessionData, refinedData):
             for i in range(0, len(cleanAData), 4):
                 convertedChunk = bytes_to_int(
                     cleanAData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
-                refinedAData.append(
-                    convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
+                v = convertedChunk / 10000
+                refinedAData.append(v)  # Convert integer to float using the opposite operation as the Arduino Mega made
+                print(convertedChunk / 10000)
+                AirFlowData.append(v * 0.00112903)
             print(refinedAData)
             refinedData['a'].append(refinedAData)
-            AirFlowData = [airspeed * 0.00112903 for airspeed in
-                           refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
+            # AirFlowData = [airspeed * 0.00112903 for airspeed in refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
 
         # Check if Smoke data
         elif SplitData[0] == 83 and len(
@@ -218,9 +219,9 @@ def readData(serialConnection, sessionData, refinedData):
             if not BadData:  # If the data was acceptable, add it to the spreadsheet
                 ExportList = ([int(current_time)]
                               + AirFlowData
-                              + refinedAData
-                              + refinedTData
-                              + refinedSData)
+                              + refinedData['a']
+                              + refinedData['t']
+                              + refinedData['s'])
                 datasheet.append(ExportList)
             elif BadData:
                 print("\033[93m" + "Suspected bad data set was dumped." + "\033[0m")
