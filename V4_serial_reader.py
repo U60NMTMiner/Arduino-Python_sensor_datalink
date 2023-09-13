@@ -199,7 +199,7 @@ def readData(serialConnection, sessionData, refinedData):
 
         # Check if 3 sets of data have arrived since last write.
         x = (sessionData['index'] + 1) % 3
-        print(f'x:{x}\nindex:{sessionData["index"]}')
+        sessionData['index'] = x
         if x == 0:  # And after all 3 sets of data have arrived...
             current_time = getCurrentTime()  # Check the time
             print("Timestamp: " + str(int(current_time)) + " seconds\n")  # Print timestamp for user
@@ -281,7 +281,6 @@ def main():
         # Begin the infinite data reading!
         while True:
             readData(ser, sessionData, refinedData)
-            sessionData['index'] += 1
 
     except KeyboardInterrupt:  # Gracefully save data and shut down the program instead of crashing
         print("\033[93m" + "[Keyboard interrupt]" + "\033[0m")
