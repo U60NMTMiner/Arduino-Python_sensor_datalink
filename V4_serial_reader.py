@@ -37,7 +37,7 @@ mainWB = xl.Workbook()  # Create spreadsheet to store data
 datasheet = mainWB.create_sheet("Data")  # Name the sheet we want to work on
 
 
-##del mainWB["sheet"]  # Delete artifact (only need it when not using write_only mode)
+# del mainWB["sheet"]  # Delete artifact (only need it when not using write_only mode)
 
 
 # Convert bytes to integers
@@ -142,7 +142,7 @@ def readData(serialConnection, sessionData, refinedData):
     if buffer.endswith(b"~~~~~"):  # And if the terminating symbol comes in...
         SplitData = list(buffer)  # Split up the byte array into list items that are easier to work with
 
-        AirFlowData = []
+        AirFlowData = refinedData['AirFlow']
 
         # Check if Airflow data
         if SplitData[0] == 65 and len(
@@ -159,6 +159,7 @@ def readData(serialConnection, sessionData, refinedData):
                 AirFlowData.append(v * 0.00112903)
             print(refinedAData)
             refinedData['a'].append(refinedAData)
+            refinedData['AirFlow'].append(AirFlowData)
             # AirFlowData = [airspeed * 0.00112903 for airspeed in refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
 
         # Check if Smoke data
@@ -202,10 +203,10 @@ def readData(serialConnection, sessionData, refinedData):
 
             if not sessionData['Header']:  # If the spreadsheet was not already given a header...
                 headerList = ([str(filename)]
-                              + ["Airflow (m^3/s)" for _ in AirFlowData]
-                              + ["Air Velocity (m/s)" for _ in refinedAData]
-                              + ["Temperature (C)" for _ in refinedTData]
-                              + ["Gas (ppm)" for _ in refinedSData])
+                              + ["Airflow (m^3/s)" for _ in refinedData['AirFlow']]
+                              + ["Air Velocity (m/s)" for _ in refinedData['a']]
+                              + ["Temperature (C)" for _ in refinedData['t']]
+                              + ["Gas (ppm)" for _ in refinedData['s']])
                 datasheet.append(headerList)  # Create one based on the amount of data being received
                 headerList = (["Time (seconds)"]
                               + Airspeed_Sensor_Coordinates
@@ -218,7 +219,7 @@ def readData(serialConnection, sessionData, refinedData):
 
             if not BadData:  # If the data was acceptable, add it to the spreadsheet
                 ExportList = ([int(current_time)]
-                              + AirFlowData
+                              + refinedData['AirFlow']
                               + refinedData['a']
                               + refinedData['t']
                               + refinedData['s'])
@@ -253,6 +254,7 @@ def main():
     sessionData['index'] = 0
     refinedData = dict()
     refinedData['a'], refinedData['s'], refinedData['t'] = [], [], []
+    refinedData['AirFlow'] = []
 
     # Open serial port
     ser = serial.Serial(config['Serial_Port'], 1000000)
