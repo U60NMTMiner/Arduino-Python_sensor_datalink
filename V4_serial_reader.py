@@ -157,7 +157,7 @@ def readData(serialConnection, sessionData, refinedData):
                     cleanAData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 v = convertedChunk / 10000
                 refinedAData.append(v)  # Convert integer to float using the opposite operation as the Arduino Mega made
-                print(convertedChunk / 10000)
+                # print(convertedChunk / 10000)
                 AirFlowData.append(v * 0.00112903)
             # print(refinedAData)
             refinedData['a'].append(refinedAData)
@@ -174,7 +174,7 @@ def readData(serialConnection, sessionData, refinedData):
                 convertedChunk = bytes_to_int(
                     cleanSData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 refinedSData.append(convertedChunk)  # No need to convert to float here, it is intended to be an integer
-            print(refinedSData)
+            # print(refinedSData)
             refinedData['s'].append(refinedSData)
 
         # Check if Temperature data
@@ -188,8 +188,8 @@ def readData(serialConnection, sessionData, refinedData):
                     cleanTData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 refinedTData.append(
                     convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
-            print(refinedTData)
             refinedData['t'].append(refinedTData)
+            print(f"RefinedTData {refinedTData}\n\nRefinedData[t] {refinedData['t']}")
 
         else:
             print("\033[93m" + "Warning: Bad serial TX/RX. Suspected bad data set will be dumped." + "\033[0m")
