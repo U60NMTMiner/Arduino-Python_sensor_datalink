@@ -125,7 +125,9 @@ def readData(serialConnection, sessionData, refinedData):
     # Python doesn't have pass-by-reference for primitive data types, so we're using a dict() to pass everything
     buffer = sessionData['buffer']
     last_time = sessionData['last_time']
-    refinedAData, refinedTData, refinedSData = refinedData['a'], ['s'], ['t']
+    refinedAData = refinedData['a']
+    refinedSData = refinedData['s']
+    refinedTData = refinedData['t']
 
     data = serialConnection.read()  # As data comes in, do not apply decoding since everything is meant to be in binary
     buffer += data  # Put it into a buffer for short-term storage
