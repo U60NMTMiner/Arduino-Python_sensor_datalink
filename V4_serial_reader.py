@@ -197,6 +197,7 @@ def readData(serialConnection, sessionData, refinedData):
 
         # Check if 3 sets of data have arrived since last write.
         x = (sessionData['index'] + 1) % 3
+        print(f'x:{x}\n')
         if x == 0:  # And after all 3 sets of data have arrived...
             current_time = getCurrentTime()  # Check the time
             print("Timestamp: " + str(int(current_time)) + " seconds\n")  # Print timestamp for user
