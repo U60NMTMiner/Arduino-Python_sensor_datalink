@@ -94,8 +94,8 @@ void loop() {
       WS_M_S = WS_MPH * 0.44704;                                // Conversion from mph to m/s
       wss[16] = WS_MPH;                                         // Store data in array
 
-      RawWind = analogRead(A4)  * 5.0 / 1023.0;
-      AmbientTemp = analogRead(A5) * 5.0 / 1023.0;
+      RawWind = analogRead(A5)  * 5.0 / 1023.0;
+      AmbientTemp = analogRead(A4) * 5.0 / 1023.0;
       AmbientTemp = (AmbientTemp - 0.400) / 0.0195;             // Temperatue calibration equation provided by manufacturer
       WS_MPH = constrain( pow(((RawWind - Vref_wind)/(3.038517 * (pow(AmbientTemp, 0.115157))))/0.087288,3.009364), 0, 100);  // Airspeed calibration provided by manufacturer
       if (isnan(WS_MPH)){                                       // If Vref_wind < RawWind, the above formula spits out "NaN" ("Not a Number")
@@ -105,8 +105,8 @@ void loop() {
       WS_M_S = WS_MPH * 0.44704;                                // Conversion from mph to m/s
       wss[17] = WS_MPH;                                         // Store data in array
 
-      RawWind = analogRead(A6)  * 5.0 / 1023.0;
-      AmbientTemp = analogRead(A7) * 5.0 / 1023.0;
+      RawWind = analogRead(A7)  * 5.0 / 1023.0;
+      AmbientTemp = analogRead(A6) * 5.0 / 1023.0;
       AmbientTemp = (AmbientTemp - 0.400) / 0.0195;             // Temperatue calibration equation provided by manufacturer
       WS_MPH = constrain( pow(((RawWind - Vref_wind)/(3.038517 * (pow(AmbientTemp, 0.115157))))/0.087288,3.009364), 0, 100);  // Airspeed calibration provided by manufacturer
       if (isnan(WS_MPH)){                                       // If Vref_wind < RawWind, the above formula spits out "NaN" ("Not a Number")
@@ -116,8 +116,8 @@ void loop() {
       WS_M_S = WS_MPH * 0.44704;                                // Conversion from mph to m/s
       wss[18] = WS_MPH;                                         // Store data in array
 
-      RawWind = analogRead(A8)  * 5.0 / 1023.0;
-      AmbientTemp = analogRead(A9) * 5.0 / 1023.0;
+      RawWind = analogRead(A9)  * 5.0 / 1023.0;
+      AmbientTemp = analogRead(A8) * 5.0 / 1023.0;
       AmbientTemp = (AmbientTemp - 0.400) / 0.0195;             // Temperatue calibration equation provided by manufacturer
       WS_MPH = constrain( pow(((RawWind - Vref_wind)/(3.038517 * (pow(AmbientTemp, 0.115157))))/0.087288,3.009364), 0, 100);  // Airspeed calibration provided by manufacturer
       if (isnan(WS_MPH)){                                       // If Vref_wind < RawWind, the above formula spits out "NaN" ("Not a Number")
@@ -127,8 +127,8 @@ void loop() {
       WS_M_S = WS_MPH * 0.44704;                                // Conversion from mph to m/s
       wss[19] = WS_MPH;                                         // Store data in array
 
-      RawWind = analogRead(A10)  * 5.0 / 1023.0;
-      AmbientTemp = analogRead(A11) * 5.0 / 1023.0;
+      RawWind = analogRead(A11)  * 5.0 / 1023.0;
+      AmbientTemp = analogRead(A10) * 5.0 / 1023.0;
       AmbientTemp = (AmbientTemp - 0.400) / 0.0195;             // Temperatue calibration equation provided by manufacturer
       WS_MPH = constrain( pow(((RawWind - Vref_wind)/(3.038517 * (pow(AmbientTemp, 0.115157))))/0.087288,3.009364), 0, 100);  // Airspeed calibration provided by manufacturer
       if (isnan(WS_MPH)){                                       // If Vref_wind < RawWind, the above formula spits out "NaN" ("Not a Number")
@@ -138,8 +138,8 @@ void loop() {
       WS_M_S = WS_MPH * 0.44704;                                // Conversion from mph to m/s
       wss[20] = WS_MPH;                                         // Store data in array
 
-      RawWind = analogRead(A12)  * 5.0 / 1023.0;
-      AmbientTemp = analogRead(A13) * 5.0 / 1023.0;
+      RawWind = analogRead(A13)  * 5.0 / 1023.0;
+      AmbientTemp = analogRead(A12) * 5.0 / 1023.0;
       AmbientTemp = (AmbientTemp - 0.400) / 0.0195;             // Temperatue calibration equation provided by manufacturer
       WS_MPH = constrain( pow(((RawWind - Vref_wind)/(3.038517 * (pow(AmbientTemp, 0.115157))))/0.087288,3.009364), 0, 100);  // Airspeed calibration provided by manufacturer
       if (isnan(WS_MPH)){                                       // If Vref_wind < RawWind, the above formula spits out "NaN" ("Not a Number")
