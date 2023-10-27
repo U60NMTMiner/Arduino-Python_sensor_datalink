@@ -78,42 +78,70 @@ void loop() {
     else if (canMsg.can_id == 0x7E && canMsg.can_dlc == 1){  // Listen for "Go" message from master control
       go = true;
       // Collect data from all sensors
-      for(int i = 0; i <= 15; i ++){
+      for(int i = 0; i <= 13; i ++){
         muxA1.channel(i);                                                   // Set channel # (0 -> 15)
         smkN = constrain(analogRead(A0), 250, 1000);                     // Take reading from common analog pin
         smks[i] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
-      for(int i = 0; i <= 15; i ++){
+      for(int i = 1; i <= 15; i ++){
         muxA2.channel(i);
         smkN = constrain(analogRead(A1), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxA3.channel(i);
         smkN = constrain(analogRead(A2), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 14] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxB1.channel(i);
         smkN = constrain(analogRead(A3), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 15 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 14 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxB2.channel(i);
         smkN = constrain(analogRead(A4), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 15 + 15 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 14 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
-      for(int i = 0; i <= 15; i ++){
+      for(int i = 0; i <= 2; i ++){
         muxB3.channel(i);
         smkN = constrain(analogRead(A5), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 15 + 15 + 15 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 14 + 15 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
+      //At this point, 75 of 84 sensors have been read
+
+      smkN = constrain(analogRead(A6), 250, 1000);
+      smks[1 + 75] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+
+      smkN = constrain(analogRead(A7), 250, 1000);
+      smks[1 + 76] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+
+      smkN = constrain(analogRead(A8), 250, 1000);
+      smks[1 + 77] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      
+      smkN = constrain(analogRead(A9), 250, 1000);
+      smks[1 + 78] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      
+      smkN = constrain(analogRead(A10), 250, 1000);
+      smks[1 + 79] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      
+      smkN = constrain(analogRead(A11), 250, 1000);
+      smks[1 + 80] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      
+      smkN = constrain(analogRead(A12), 250, 1000);
+      smks[1 + 81] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      
+      smkN = constrain(analogRead(A13), 250, 1000);
+      smks[1 + 82] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+
+      smkN = constrain(analogRead(A14), 250, 1000);
+      smks[1 + 83] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
     }
     
     // Wait for the airspeed's end of data before broadcasting
     else if (canMsg.can_id == 0x5E && canMsg.data[0] == 0x41 && go == true){  // go=True condition to prevent spamming after Master's ping
       delay(5);
-      for(int i = 0; i < 93; i++){                // For all 93 smoke sensors...
+      for(int i = 0; i < 84; i++){                // For all 84 smoke sensors...
         I2B(long(smks[i]), databytes);            // Convert data from ints to bytes...
         for(int o = 0; o < 4; o++){               // (Need 4 bytes to hold all data)
           canData.data[o] = databytes[o];         // Put data (as 4 bytes) into the CAN message...
