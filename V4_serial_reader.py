@@ -160,8 +160,8 @@ def readData(serialConnection, sessionData, refinedData):
                 # print(convertedChunk / 10000)
                 AirFlowData.append(v * 0.00112903)
             # print(refinedAData)
-            refinedData['a'].append(refinedAData)
-            refinedData['AirFlow'].append(AirFlowData)
+            #refinedData['a'].append(refinedAData)
+            #refinedData['AirFlow'].append(AirFlowData)
             # AirFlowData = [airspeed * 0.00112903 for airspeed in refinedAData]  # Spin off a new list for airflow by multiplying by cross-sectional area
 
         # Check if Smoke data
@@ -175,7 +175,7 @@ def readData(serialConnection, sessionData, refinedData):
                     cleanSData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 refinedSData.append(convertedChunk)  # No need to convert to float here, it is intended to be an integer
             # print(refinedSData)
-            refinedData['s'].append(refinedSData)
+            #refinedData['s'].append(refinedSData)
 
         # Check if Temperature data
         elif SplitData[0] == 84 and len(
@@ -188,7 +188,7 @@ def readData(serialConnection, sessionData, refinedData):
                     cleanTData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 refinedTData.append(
                     convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
-            refinedData['t'].append(refinedTData)
+            #refinedData['t'].append(refinedTData)
             print(f"RefinedTData {refinedTData}\n\nRefinedData[t] {refinedData['t']}")
 
         else:
