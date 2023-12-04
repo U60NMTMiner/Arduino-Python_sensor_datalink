@@ -94,7 +94,7 @@ def keepConstantTiming(last_time, interval):
     :param interval: Time to wait from last break until starting next loop
     """
     time_passed = getCurrentTime() - last_time
-    time_remaining = interval - time_passed
+    time_remaining = abs(time_passed - interval)
     wait_time = time_remaining / 4
 
     # Run this loop 3 times to get 75% of the way done with the wait time. (Large jumping)
