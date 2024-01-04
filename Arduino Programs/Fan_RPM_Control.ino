@@ -1,43 +1,38 @@
-//Source: https://forum.arduino.cc/t/controlling-4pin-fan-with-pwm-25khz/399618/3
+const int s1fan = 5;  // PWM-enabled pin for LED 1
+const int s2fan = 6;  // PWM-enabled pin for LED 2
 
-word VentPin = 3;
+const int potPin1 = A0;  // Analog pin for Potentiometer 1
+const int potPin2 = A1;  // Analog pin for Potentiometer 2
+
+LEDC ledc1;
+LEDC ledc2;
 
 void setup() {
-  pinMode(VentPin, OUTPUT);
-  Serial.begin(9600);
-  pwm25kHzBegin();
-  
+  // Set up PWM channels
+  ledc1.setup(1, 25000, 8);  // channel 1, 25000 Hz, 8-bit resolution
+  ledc2.setup(2, 25000, 8);  // channel 2, 25000 Hz, 8-bit resolution
+
+  // Attach PWM channels to fan speed control pins
+  ledc1.attachPin(s1fan);
+  ledc2.attachPin(s2fan);
+
+  // Set initial fan speed to zero
+  ledc1.write(0);
+  ledc2.write(0);
 }
 
 void loop() {
-  pwmDuty(0); // 0% (range = 0-79 = 1.25-100%)
-  Serial.println("0%");
-  delay(6000);
-  pwmDuty(19); // 25% (range = 0-79 = 1.25-100%)
-  Serial.println("25%");
-  delay(4000);
-  pwmDuty(39); // 50% (range = 0-79 = 1.25-100%)
-  Serial.println("50%");
-  delay (4000);
-  pwmDuty(59); // 75% (range = 0-79 = 1.25-100%)
-  Serial.println("75%");
-  delay (4000);
-  pwmDuty(79); // 100% (range = 0-79 = 1.25-100%)
-  Serial.println("100%");
-  delay (4000);
-}
+  // Read potentiometers
+  int potValue1 = analogRead(potPin1);
+  int potValue2 = analogRead(potPin2);
 
-void pwm25kHzBegin() {
-  TCCR2A = 0;                               // TC2 Control Register A
-  TCCR2B = 0;                               // TC2 Control Register B
-  TIMSK2 = 0;                               // TC2 Interrupt Mask Register
-  TIFR2 = 0;                                // TC2 Interrupt Flag Register
-  TCCR2A |= (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);  // OC2B cleared/set on match when up/down counting, fast PWM
-  TCCR2B |= (1 << WGM22) | (1 << CS21);     // prescaler 8
-  OCR2A = 79;                               // TOP overflow value (Hz)
-  OCR2B = 0;
-}
+  // Remap potentiometer input signal range to PWM ouput signal range
+  int s1rpm = map(potValue1, 0, 1023, 0, 255);
+  int s2rpm = map(potValue2, 0, 1023, 0, 255);
 
-void pwmDuty(byte ocrb) {
-  OCR2B = ocrb;                             // PWM Width (duty)
+  // Update fan speed
+  ledc1.write(s1rpm);
+  ledc2.write(s2rpm);
+
+  delay(5);
 }
