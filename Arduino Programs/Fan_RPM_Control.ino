@@ -1,8 +1,8 @@
-const int s1fan = 5;  // PWM-enabled pin for LED 1
-const int s2fan = 6;  // PWM-enabled pin for LED 2
+const int s1fan = 4;  // Attach GREEN to "D4"
+const int s2fan = 5;  // Attach YELLOW to "D5"
 
-const int potPin1 = A0;  // Analog pin for Potentiometer 1
-const int potPin2 = A1;  // Analog pin for Potentiometer 2
+const int potPin1 = A2;  // Potentiometer 1 to pin "D2"
+const int potPin2 = A3;  // Potentiometer 2 to pin "D3"
 
 LEDC ledc1;
 LEDC ledc2;
@@ -34,5 +34,5 @@ void loop() {
   ledc1.write(s1rpm);
   ledc2.write(s2rpm);
 
-  delay(5);
+  delay(10);
 }
