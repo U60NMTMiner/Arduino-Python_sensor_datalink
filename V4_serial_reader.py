@@ -17,7 +17,6 @@ cwd = config['Working_Directory']
 if not cwd:
     cwd = func.default_path()
 
-# Once the sensors have been installed and wired into the multiplexer arrays, coordinate locations will be assigned here
 # Sensor layout and coordinate system are defined here:
 # https://docs.google.com/presentation/d/1iU9-4sDkxN5r5blLVAVAElmQhg7pdddcT2UxLzKhD1Q/edit?usp=sharing
 Airspeed_Sensor_Coordinates = config['Airspeed_Sensor_Coordinates']
@@ -35,9 +34,6 @@ Reasons: In either case, its only temporarily useful.
 filename = f'{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")}_data.xlsx'  # Set up unique filename for exported data
 mainWB = xl.Workbook()  # Create spreadsheet to store data
 datasheet = mainWB.create_sheet("Data")  # Name the sheet we want to work on
-
-
-# del mainWB["sheet"]  # Delete artifact (only need it when not using write_only mode)
 
 
 # Convert bytes to integers
@@ -218,6 +214,7 @@ def readData(serialConnection, sessionData, refinedData):
                               + Gas_Sensor_Coordinates)
                 datasheet.append(headerList)
                 del headerList  # Clean up memory
+                del mainWB["Sheet"]  # Delete artifact
                 sessionData['Header'] = True  # Now it has a header
 
             if not BadData:  # If the data was acceptable, add it to the spreadsheet
@@ -235,7 +232,7 @@ def readData(serialConnection, sessionData, refinedData):
             elif BadData:
                 print("\033[93m" + "Suspected bad data set was dumped." + "\033[0m")
 
-            refinedData['a'], refinedData['s'], refinedData['t'] = [], [], []  # Make room for new data decoding
+            refinedData['AirFlow'], refinedData['a'], refinedData['s'], refinedData['t'] = [], [], [], []  # Make room for new data decoding
 
             saveWorkbook()
             # datasheet = mainWB["Data"]
