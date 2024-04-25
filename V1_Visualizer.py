@@ -2,9 +2,11 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 
+
 def on_button_click(text):
     # Display a message box with the specified text when the button is clicked
     messagebox.showinfo("Information", text)
+
 
 # Create the main application window
 root = tk.Tk()
