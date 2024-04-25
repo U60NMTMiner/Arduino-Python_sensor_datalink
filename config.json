@@ -1,6 +1,7 @@
 {
     "Working_Directory" : "",
-    "Serial_Port" : "/dev/ttyUSB0",
+    "Serial_Port" : "COM3",
+    "Serial_Port_Linux" : "/dev/ttyUSB0",
     "Airspeed_Sensor_Coordinates" : [
         "09-01", "09-02", "09-03", "09-04", "09-05", "09-06", "09-07", "10-11", "11-11", "12-11",
         "13-11", "14-06", "15-06", "16-06", "17-06", "18-06", "18-12", "18-13", "18-14", "18-15",

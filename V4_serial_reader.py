@@ -91,7 +91,7 @@ def keepConstantTiming(last_time, interval):
     """
     time_passed = getCurrentTime() - last_time
     time_remaining = abs(time_passed - interval)
-    wait_time = time_remaining / 4
+    wait_time = time_remaining / 10
 
     # Run this loop 3 times to get 75% of the way done with the wait time. (Large jumping)
     for i in range(0, 3):
@@ -284,15 +284,19 @@ def main():
         if ser.is_open:
             ser.close()  # Close the serial connection
             print("\033[94m" + "Serial connection closed" + "\033[0m")
+            time.sleep(0.5)
+
 
         # try:
         print("Saving spreadsheet...")
         saveWorkbook()  # Save the spreadsheet
+        time.sleep(0.25)
         mainWB.close()
         print(f"Spreadsheet saved: \033[32m{cwd}/{filename}\033[0m")
         # except FileNotFoundError:  # ... Unless it was already saved
         #     print(f"Spreadsheet was already saved: \033[32m{cwd}/{filename}\033[0m")
 
+        time.sleep(0.25)
         final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet:")
         if final == "del":
             os.remove(f'{cwd}/{filename}')
