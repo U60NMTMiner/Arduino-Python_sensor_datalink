@@ -22,9 +22,9 @@ image_label = tk.Label(root, image=photo)
 image_label.pack()
 
 # Create buttons and place them on the image
-button_texts = ["Button 1", "Button 2", "Button 3"]
-button_texts_texts = ["Text 1", "Text 2", "Text 3"]
-button_positions = [(50, 50), (150, 100), (250, 150)]  # Coordinates for buttons (x, y)
+button_texts = ["Button 1", "Button 2", "Button 3", "Button 4"]
+button_texts_texts = ["Text 1", "Text 2", "Text 3", "Text for button number 4"]
+button_positions = [(50, 50), (150, 100), (250, 150), (0,0)]  # Coordinates for buttons (x, y)
 
 # Create buttons and add them to the image
 for text, btn_text, pos in zip(button_texts, button_texts_texts, button_positions):
