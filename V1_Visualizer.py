@@ -14,7 +14,7 @@ def start():
         text_label.config(text=str(values))
 
     # Function to handle radio button selection
-    selected_option = 1
+    selected_option = 3
     def on_option_selected():
         global selected_option
         selected_option = radio_var.get()
@@ -27,7 +27,10 @@ def start():
         for index, button in enumerate(buttons):
             # global array_97x3
             global selected_option
-            value = array_97x3[index, (selected_option - 1), 0]
+            try:
+                value = array_97x3[index, (selected_option - 1), 0]
+            except NameError:
+                value = array_97x3[index, 2, 0]
 
             # Map the average value to a color using `value_to_color`
             color = value_to_color(value)
@@ -200,6 +203,8 @@ def start():
     # Create a label to display text in the bottom right corner of the image
     text_label = tk.Label(root, text="", font=("Arial", 14), bg="white")
     text_label.place(relx=0.80, rely=1.0, anchor="se")
+
+    update_button_colors()
 
     # Start the Tkinter event loop
     root.mainloop()
