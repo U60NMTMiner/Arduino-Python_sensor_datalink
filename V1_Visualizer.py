@@ -25,12 +25,11 @@ def start():
     def update_button_colors():
         # Update the colors of all buttons based on their corresponding values from `array_97x3`
         for index, button in enumerate(buttons):
-            # global array_97x3
             global selected_option
             try:
-                value = array_97x3[index, (selected_option - 1), 0]
+                value = array_97x3[index, (selected_option - 1), 0]  # Normally, use the selected option
             except NameError:
-                value = array_97x3[index, 2, 0]
+                value = array_97x3[index, 2, 0]  # On first start, no option has yet been registered
 
             # Map the average value to a color using `value_to_color`
             color = value_to_color(value)
@@ -136,8 +135,8 @@ def start():
             root,
             text=str(index + 1),
             command=lambda idx=index: on_button_click(idx),
-            width=5,
-            height=2,
+            width=2,
+            height=1,
             bg="gray",  # Buttons start as grayed out to show no dataset selected
             fg="black"
         )
