@@ -1,43 +1,189 @@
-import tkinter as tk
-from tkinter import messagebox
-from PIL import Image, ImageTk
 
+def start():
+    import openpyxl as xl
+    import tkinter as tk
+    from tkinter import messagebox, ttk
+    from PIL import Image, ImageTk
+    import numpy as np
 
-def on_button_click(text):
-    # Display a message box with the specified text when the button is clicked
-    messagebox.showinfo("Information", text)
+    def on_button_click(index):
+        # Retrieve the corresponding row from the 97x3 array using the button's index
+        values = array_97x3[index]
 
+        # Update the text_label to display the three values in the bottom right corner of the image
+        text_label.config(text=str(values))
 
-# Create the main application window
-root = tk.Tk()
-root.title("Image with Buttons")
+    def update_button_colors():
+        # Update the colors of all buttons based on their corresponding values from `array_97x3`
+        for index, button in enumerate(buttons):
+            # Calculate the average of the three values in the current row of `array_97x3`
+            value = array_97x3[index, 0]
+            # avg_value = sum(values) / len(values)
 
-# Load the image using PIL (Pillow) and convert it to a PhotoImage object
-image_path = "ref.bmp"  # Replace with your image path
-image = Image.open(image_path)
-photo = ImageTk.PhotoImage(image)
+            # Map the average value to a color using `value_to_color`
+            color = value_to_color(value)
 
-# Create a label to display the image
-image_label = tk.Label(root, image=photo)
-image_label.pack()
+            # Set the background color of the button based on the color
+            button.config(bg=color)
 
-# Create buttons and place them on the image
-button_texts = ["Button 1", "Button 2", "Button 3", "Button 4"]
-button_texts_texts = ["Text 1", "Text 2", "Text 3", "Text for button number 4"]
-button_positions = [(50, 50), (150, 100), (250, 150), (0,0)]  # Coordinates for buttons (x, y)
+    def on_listbox_select(event):
+        # Handle listbox selection changes
+        selected_index = listbox.curselection()
+        if selected_index:
+            selected_set = listbox.get(selected_index)
+            # Convert the selected set to an integer
+            selected_set_index = int(selected_set.replace("Set ", "")) - 1
 
-# Create buttons and add them to the image
-for text, btn_text, pos in zip(button_texts, button_texts_texts, button_positions):
-    button = tk.Button(
-        root,
-        text=text,
-        command=lambda btn_text=btn_text: on_button_click(btn_text),
-        width=10,  # Change button width
-        height=2,  # Change button height
-        bg="lightblue",  # Change button background color
-        fg="black"  # Change button foreground (text) color
+            # Update the button colors based on the selected set
+            update_button_colors()
+
+            # Update the title of the application window
+            root.title(f"Image with Buttons - {selected_set}")
+
+    def confirm_exit():
+        # Show a confirmation dialog asking if the user wants to quit
+        if messagebox.askyesno("Confirm Exit", "Are you sure you want to quit?"):
+            root.quit()
+
+    def close_and_reopen():
+        # Close the main application window
+        root.withdraw()
+
+        # Clear previous data
+        text_label.config(text=str(""))
+
+        # Update the 97x3 array from an outside source (here, we're simulating with random values)
+        update_array()
+        update_button_colors()
+
+        # Reopen the main application window after a delay (2 seconds)
+        root.after(5, root.deiconify)
+
+    def update_array():
+        # Update the 97x3 array with random values (simulate from an outside source)
+        global array_97x3
+        array_97x3 = np.random.randint(0, 100, size=(97, 3))
+
+    def value_to_color(value):
+        # Map a value to a specific color
+        if value < 20:
+            return "red"
+        elif value < 50:
+            return "yellow"
+        else:
+            return "green"
+
+    # Create the main application window
+    root = tk.Tk()
+    root.title("Image with Buttons")
+
+    # Lock the window size to prevent resizing
+    root.resizable(False, False)
+
+    # Load the image using PIL (Pillow) and convert it to a PhotoImage object
+    image_path = "Sensor_layout.png"  # Use the reference image path
+    image = Image.open(image_path)
+    photo = ImageTk.PhotoImage(image)
+
+    # Create a label to display the image
+    image_label = tk.Label(root, image=photo)
+    image_label.pack(side=tk.LEFT)
+
+    # Initialize a 97x3 array with random values (replace with your data as needed)
+    global array_97x3
+    array_97x3 = np.random.randint(0, 100, size=(97, 3))
+
+    # Create buttons and place them on the image in a grid
+    buttons = []
+    num_buttons = 97
+    grid_rows = 10
+    grid_cols = 10
+
+    # Loop through rows and columns to create the 97 buttons
+    for index in range(num_buttons):
+        # Calculate the row and column of the button
+        row = index // grid_cols
+        col = index % grid_cols
+
+        # Create a button and set its command to the `on_button_click` function
+        button = tk.Button(
+            root,
+            text=str(index + 1),
+            command=lambda idx=index: on_button_click(idx),
+            width=5,
+            height=2,
+            bg="gray",
+            fg="black"
+        )
+
+        # Place the button on the image using a grid layout
+        button.place(x=50 + col * 50, y=50 + row * 50)  # Adjust button positions as needed
+        buttons.append(button)
+
+    # Create a frame to hold buttons and listbox on the right side
+    frame = tk.Frame(root)
+    frame.pack(side=tk.RIGHT, fill=tk.Y)
+
+    # Create a listbox for selecting values with custom colors and fonts
+    listbox_bg_color = "#36454F"  # Charcoal gray
+    listbox_fg_color = "#D3D3D3"  # Light gray
+    listbox_font = ("Arial", 12)
+
+    listbox = tk.Listbox(
+        frame,
+        height=5,
+        font=listbox_font,
+        bg=listbox_bg_color,
+        fg=listbox_fg_color
     )
-    button.place(x=pos[0], y=pos[1])
+    listbox.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-# Start the Tkinter event loop
-root.mainloop()
+    # Populate the listbox with the names of the sets of values
+    for i in range(1, 4):
+        listbox.insert(tk.END, f"Set {i}")
+
+    # Create a scrollbar and attach it to the listbox
+    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=listbox.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    listbox.config(yscrollcommand=scrollbar.set)
+
+    # Bind the listbox selection event
+    listbox.bind("<<ListboxSelect>>", on_listbox_select)
+
+    # Create a frame for the "close and reopen" and "exit" buttons
+    button_frame = tk.Frame(frame)
+    button_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Create the "close and reopen" button and place it above the "exit" button
+    reopen_button = tk.Button(
+        button_frame,
+        text="Close and Reopen",
+        command=close_and_reopen,
+        bg="blue",
+        fg="white"
+    )
+    reopen_button.pack(fill=tk.X, padx=5, pady=5)
+
+    # Create the "exit" button and place it below the "close and reopen" button
+    exit_button = tk.Button(
+        button_frame,
+        text="Exit",
+        command=confirm_exit,
+        bg="red",
+        fg="white"
+    )
+    exit_button.pack(fill=tk.X, padx=5, pady=5)
+
+    # Create a label to display text in the bottom right corner of the image
+    text_label = tk.Label(root, text="", font=("Arial", 12), bg="white")
+    text_label.place(relx=0.85, rely=1.0, anchor="se")
+
+    # Start the Tkinter event loop
+    root.mainloop()
+
+    print("Done")
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    start()
