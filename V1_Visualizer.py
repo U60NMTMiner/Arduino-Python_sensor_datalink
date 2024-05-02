@@ -5,6 +5,10 @@ def start():
     from tkinter import messagebox, ttk
     from PIL import Image, ImageTk
     import numpy as np
+    import Modules.functions as func
+
+    # Pull in the config file
+    config = func.open_file("config")
 
     def on_button_click(index):
         # Retrieve the corresponding row from the 97x3 array using the button's index
@@ -118,13 +122,14 @@ def start():
     global array_97x3
     array_97x3 = np.random.randint(0, 100, size=(97, 3, 1))
 
+    '''
     # Create buttons and place them on the image in a grid
     buttons = []
     num_buttons = 97
     grid_rows = 10
     grid_cols = 10
 
-    # Loop through rows and columns to create the 97 buttons
+    # Loop through rows and columns to create the grid of 97 buttons
     for index in range(num_buttons):
         # Calculate the row and column of the button
         row = index // grid_cols
@@ -142,18 +147,55 @@ def start():
         )
 
         # Place the button on the image using a grid layout
-        button.place(x=50 + col * 50, y=50 + row * 50)  # Adjust button positions as needed
+        #button.place(x=50 + col * 50, y=50 + row * 50)  # Adjust button positions as needed
         buttons.append(button)
+        '''
+
+    buttons = []
+
+    # Lower 'block'
+    for pos in range(0, 4):
+        altbutton = tk.Button(
+            root,
+            text=str(pos + 1),
+            command=lambda idx=pos + 1: on_button_click(idx),
+            width=2,
+            height=1,
+            bg="gray",
+            fg="black"
+        )
+        #altbutton.place(x=config['Button_Column'][pos[0]], y=config['Button_Row'][pos[0]])
+        altbutton.place(x=config['Button_Column'][pos], y=config['Button_Row'][pos])
+        buttons.append(altbutton)
+
+    # Upper 'block'
+    for pos in range(0, 4):
+        altbutton = tk.Button(
+            root,
+
+            text=str(pos + 1 + 60), #!don't forget to change +60 to however many nodes there are
+
+            command=lambda idx=pos + 1: on_button_click(idx),
+            width=2,
+            height=1,
+            bg="gray",
+            fg="black"
+        )
+        #altbutton.place(x=config['Button_Column'][pos[0]], y=config['Button_Row'][pos[0]])
+        altbutton.place(x=config['Button_Column'][pos], y=config['Button_Row'][pos])
+        buttons.append(altbutton)
+
+
+
 
     # Create a frame to hold buttons and listbox on the right side
     frame = tk.Frame(root)
     frame.pack(side=tk.RIGHT, fill=tk.Y)
 
-    # Create a listbox for selecting values with custom colors and fonts
+    # Create a listbox for selecting datasets
     listbox_bg_color = "#36454F"  # Charcoal gray
     listbox_fg_color = "#D3D3D3"  # Light gray
     listbox_font = ("Arial", 14)
-
     listbox = tk.Listbox(
         frame,
         height=5,
@@ -201,7 +243,7 @@ def start():
 
     # Create a label to display text in the bottom right corner of the image
     text_label = tk.Label(root, text="", font=("Arial", 14), bg="white")
-    text_label.place(relx=0.80, rely=1.0, anchor="se")
+    text_label.place(relx=0.80, rely=0.9, anchor="se")
 
     update_button_colors()
 
