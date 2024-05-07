@@ -152,39 +152,44 @@ def start():
         '''
 
     buttons = []
+    indx = 0
 
     # Lower 'block'
-    for pos in range(0, 4):
+    #for posx in enumerate(config['Button_Column']):
+        #for posy in enumerate(config['Button_Row']):
+    for pos in enumerate(config['Button_Coordinates']):
+        indx = indx + 1
         altbutton = tk.Button(
             root,
-            text=str(pos + 1),
-            command=lambda idx=pos + 1: on_button_click(idx),
+            text=str(indx),
+            command=lambda idx=indx: on_button_click(idx),
             width=2,
             height=1,
             bg="gray",
             fg="black"
         )
-        #altbutton.place(x=config['Button_Column'][pos[0]], y=config['Button_Row'][pos[0]])
-        altbutton.place(x=config['Button_Column'][pos], y=config['Button_Row'][pos])
+        #altbutton.place(x=config['Button_Column'][0], y=config['Button_Row'][0])
+        altbutton.place(x=int(pos[1][1]), y=int(pos[1][0]))
         buttons.append(altbutton)
 
+    '''
     # Upper 'block'
-    for pos in range(0, 4):
-        altbutton = tk.Button(
-            root,
-
-            text=str(pos + 1 + 60), #!don't forget to change +60 to however many nodes there are
-
-            command=lambda idx=pos + 1: on_button_click(idx),
-            width=2,
-            height=1,
-            bg="gray",
-            fg="black"
-        )
-        #altbutton.place(x=config['Button_Column'][pos[0]], y=config['Button_Row'][pos[0]])
-        altbutton.place(x=config['Button_Column'][pos], y=config['Button_Row'][pos])
-        buttons.append(altbutton)
-
+    for posx in enumerate(config['Button_Column']):
+        for posy in enumerate(config['Button_Row']):
+            indx = indx + 1
+            altbutton = tk.Button(
+                root,
+                text=str(indx), #!don't forget to change +60 to however many nodes there are
+                command=lambda idx=indx: on_button_click(idx),
+                width=2,
+                height=1,
+                bg="gray",
+                fg="black"
+            )
+            altbutton.place(x=config['Button_Column'][0], y=config['Button_Row'][0])
+            #altbutton.place(x=config['Button_Column'][posx], y=config['Button_Row'][posy])
+            buttons.append(altbutton)
+    '''
 
 
 
