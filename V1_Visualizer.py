@@ -1,3 +1,7 @@
+import os.path
+import tkinter.messagebox
+import time
+
 
 def start():
     import openpyxl as xl
@@ -66,18 +70,53 @@ def start():
         text_label.config(text=str(""))
 
         # Update the 97x3 array from an outside source (here, we're simulating with random values)
-        update_array()
+        update_array_rand()
+        #update_array_prime()
         update_button_colors()
         # root.after(5, root.deiconify)
         root.deiconify()
 
-    def update_array():
+    def update_array_rand():
         # Update the 97x3 array with random values (simulate from an outside source)
         global array_97x3
         appArray = np.random.randint(0, 100, size=(97, 3, 1))
         global HISTArray_97x3
         HISTArray_97x3 = np.dstack((array_97x3, appArray))  # Keep a history of previous data
         array_97x3 = appArray                               # Redefine array with new data
+
+    def update_array_prime():
+        # Update the 97x3 array with values from a spreadsheet
+        SpSheet = inputtxt.get()  # Request spreadsheet name from user
+        while (not os.path.exists(SpSheet)) and (SpSheet[-4:] != ".xlsx"):
+            tkinter.messagebox.showerror(title="Error",
+                                         message="File not found, enter name of data spreadsheet."
+                                                 "\n\rUse .xlsx files only")
+            inputtxt.delete(0, 'end')   # Clear text entry
+            return                      # Don't load a spreadsheet that doesn't exist
+        wb = xl.load_workbook(SpSheet)  # Load spreadsheet
+        sheet = wb["Data"]
+        maxCol = sheet.max_column - 2   # For some reason, there are two unassigned coordinates hanging off the end
+        maxRow = sheet.max_row
+        # print(maxRow, maxCol)
+        print("Accessed workbook: ", SpSheet)
+        root.title(SpSheet)
+        if maxCol == 220:  # Make sure the row of data is complete
+            RowData = []
+            for value in sheet.iter_cols(min_col=25, max_col=maxCol, min_row=maxRow, values_only=True):
+                RowData.append(value[0])
+            AirVel = RowData[:22]         # 23 air velocity
+            TemVal = RowData[23:(23+89)]  # 89 temperature
+            GasVal = RowData[(23+89):]    # 84 gas
+            wb.close()
+            global array_97x3
+            appArray = [[AirVel], [TemVal], [GasVal]]
+            #global HISTArray_97x3
+            #HISTArray_97x3 = np.dstack((array_97x3, appArray))  # Keep a history of previous data
+            array_97x3 = appArray
+
+        else:
+            wb.close()
+            tkinter.messagebox.showerror(title="Error", message="Latest row of spreadsheet contains invalid data")
 
     def value_to_color(value):
         # Map a value to a specific color
@@ -90,7 +129,7 @@ def start():
 
     # Create the main application window
     root = tk.Tk()
-    root.title("Image with Buttons")
+    root.title("Simulation Rig Data visualization")
 
     # Lock the window size to prevent resizing
     root.resizable(False, False)
@@ -118,9 +157,9 @@ def start():
     image_label = tk.Label(root, image=photo)
     image_label.pack(side=tk.LEFT)
 
-    # Initialize a 97x3 array with random values (replace with your data as needed)
+    # Initialize a 97x3 array with basic values
     global array_97x3
-    array_97x3 = np.random.randint(0, 100, size=(97, 3, 1))
+    array_97x3 = np.zeros(shape=(97, 3, 1))
 
     '''
     # Create buttons and place them on the image in a grid
@@ -225,6 +264,12 @@ def start():
     # Create a frame for the "close and reopen" and "exit" buttons
     button_frame = tk.Frame(frame)
     button_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Ask where to get spreadsheet from
+    inputtxtlabel = tk.Label(button_frame, text="Enter name of spreadsheet:", font="Arial, 12")
+    inputtxtlabel.pack(fill=tk.X)
+    inputtxt = tk.Entry(button_frame, font="Arial, 12", bg="white")
+    inputtxt.pack(fill=tk.X)
 
     # Create the "close and reopen" button and place it above the "exit" button
     reopen_button = tk.Button(
