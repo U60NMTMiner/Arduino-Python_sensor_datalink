@@ -1,7 +1,3 @@
-import os.path
-import tkinter.messagebox
-import time
-
 
 def start():
     import openpyxl as xl
@@ -10,18 +6,23 @@ def start():
     from PIL import Image, ImageTk
     import numpy as np
     import Modules.functions as func
+    import os.path
+    import tkinter.messagebox
+    import time
 
     # Pull in the config file
     config = func.open_file("config")
 
     def on_button_click(index):
         # Retrieve the corresponding row from the 97x3 array using the button's index
-        values = array_97x3[index]
+        global DataArray
+        values = DataArray[index]
 
         # Update the text_label to display the three values in the bottom right corner of the image
         text_label.config(text=str(values))
 
     # Function to handle radio button selection
+    global selected_option
     selected_option = 3
     def on_option_selected():
         global selected_option
@@ -33,11 +34,10 @@ def start():
     def update_button_colors():
         # Update the colors of all buttons based on their corresponding values from `array_97x3`
         for index, button in enumerate(buttons):
-            global selected_option
             try:
-                value = array_97x3[index, (selected_option - 1), 0]  # Normally, use the selected option
+                value = DataArray[index][selected_option - 1]  # Normally, use the selected option
             except NameError:
-                value = array_97x3[index, 2, 0]  # On first start, no option has yet been registered
+                value = DataArray[index][2]  # On first start, no option has yet been registered
 
             # Map the average value to a color using `value_to_color`
             color = value_to_color(value)
@@ -69,69 +69,85 @@ def start():
         # Clear previous data
         text_label.config(text=str(""))
 
-        # Update the 97x3 array from an outside source (here, we're simulating with random values)
-        update_array_rand()
-        #update_array_prime()
-        update_button_colors()
-        # root.after(5, root.deiconify)
-        root.deiconify()
+        # Update the data array from an outside source
+        update_array_prime()    # Pull in new data
+        update_button_colors()  # Update button colors
+        root.deiconify()        # Update the buttons
 
     def update_array_rand():
         # Update the 97x3 array with random values (simulate from an outside source)
-        global array_97x3
+        global DataArray
         appArray = np.random.randint(0, 100, size=(97, 3, 1))
-        global HISTArray_97x3
-        HISTArray_97x3 = np.dstack((array_97x3, appArray))  # Keep a history of previous data
-        array_97x3 = appArray                               # Redefine array with new data
+        global HistArray
+        HistArray = np.dstack((DataArray, appArray))  # Keep a history of previous data
+        DataArray = appArray                               # Redefine array with new data
 
     def update_array_prime():
         # Update the 97x3 array with values from a spreadsheet
         SpSheet = inputtxt.get()  # Request spreadsheet name from user
-        while (not os.path.exists(SpSheet)) and (SpSheet[-4:] != ".xlsx"):
+        while (not os.path.exists(SpSheet)) and (SpSheet[-4:] != ".xlsx"):  # Check for valid spreadsheet
             tkinter.messagebox.showerror(title="Error",
                                          message="File not found, enter name of data spreadsheet."
                                                  "\n\rUse .xlsx files only")
             inputtxt.delete(0, 'end')   # Clear text entry
             return                      # Don't load a spreadsheet that doesn't exist
-        wb = xl.load_workbook(SpSheet)  # Load spreadsheet
+        wb = xl.load_workbook(SpSheet)  # If the spreadsheet is valid, load spreadsheet
         sheet = wb["Data"]
         maxCol = sheet.max_column - 2   # For some reason, there are two unassigned coordinates hanging off the end
         maxRow = sheet.max_row
-        # print(maxRow, maxCol)
         print("Accessed workbook: ", SpSheet)
         root.title(SpSheet)
         if maxCol == 220:  # Make sure the row of data is complete
             RowData = []
             for value in sheet.iter_cols(min_col=25, max_col=maxCol, min_row=maxRow, values_only=True):
                 RowData.append(value[0])
-            AirVel = RowData[:22]         # 23 air velocity
-            TemVal = RowData[23:(23+89)]  # 89 temperature
-            GasVal = RowData[(23+89):]    # 84 gas
+            AirVel = RowData[:23]         # 23 air velocity sensors
+            while len(AirVel) < 89:
+                AirVel.append("None")
+            TemVal = RowData[23:(23+89)]  # 89 temperature sensors
+            while len(TemVal) < 89:
+                TemVal.append("None")
+            GasVal = RowData[(23+89):]    # 84 gas sensors
+            while len(GasVal) < 89:
+                GasVal.append("None")
             wb.close()
-            global array_97x3
-            appArray = [[AirVel], [TemVal], [GasVal]]
-            #global HISTArray_97x3
-            #HISTArray_97x3 = np.dstack((array_97x3, appArray))  # Keep a history of previous data
-            array_97x3 = appArray
+            global DataArray
+            appArray = list(zip(AirVel, TemVal, GasVal))
 
+            # Keep a history of previous data
+            global HistArray
+            global arrLock
+            try:
+                if len(HistArray) == 89 and arrLock == 0:
+                    HistArray = [HistArray, appArray]
+                    arrLock = 1
+                else:
+                    HistArray.append(appArray)
+            except NameError:
+                HistArray = appArray     # If this is the first iteration, nothing to extend on
+            DataArray = appArray
         else:
             wb.close()
-            tkinter.messagebox.showerror(title="Error", message="Latest row of spreadsheet contains invalid data")
+            tkinter.messagebox.showerror(title="Error", message="Spreadsheet row contains invalid data")
 
     def value_to_color(value):
-        # Map a value to a specific color
-        if value < 20:
+        if value == "None":
+            return "gray"
+        elif value < 20:
             return "red"
         elif value < 50:
             return "yellow"
         else:
             return "green"
 
+    ####################################################################################################
+    ###  First-run setup  ###
+
     # Create the main application window
     root = tk.Tk()
     root.title("Simulation Rig Data visualization")
 
-    # Lock the window size to prevent resizing
+    # Lock the window to prevent resizing
     root.resizable(False, False)
 
     # Create a variable to hold the value of the selected radio button
@@ -157,48 +173,20 @@ def start():
     image_label = tk.Label(root, image=photo)
     image_label.pack(side=tk.LEFT)
 
-    # Initialize a 97x3 array with basic values
-    global array_97x3
-    array_97x3 = np.zeros(shape=(97, 3, 1))
+    # Initialize an empty array so the program doesn't error out when first starting
+    global DataArray
+    DataArray = np.zeros(shape=(90, 3, 1))
 
-    '''
-    # Create buttons and place them on the image in a grid
-    buttons = []
-    num_buttons = 97
-    grid_rows = 10
-    grid_cols = 10
+    # Set up data storage
+    global arrLock
+    arrLock = 0  # Used to kickstart the HistArray data storage
 
-    # Loop through rows and columns to create the grid of 97 buttons
-    for index in range(num_buttons):
-        # Calculate the row and column of the button
-        row = index // grid_cols
-        col = index % grid_cols
-
-        # Create a button and set its command to the `on_button_click` function
-        button = tk.Button(
-            root,
-            text=str(index + 1),
-            command=lambda idx=index: on_button_click(idx),
-            width=2,
-            height=1,
-            bg="gray",  # Buttons start as grayed out to show no dataset selected
-            fg="black"
-        )
-
-        # Place the button on the image using a grid layout
-        #button.place(x=50 + col * 50, y=50 + row * 50)  # Adjust button positions as needed
-        buttons.append(button)
-        '''
-
+    # Place all the buttons on the image
     buttons = []
     indx = 0
-
-    # Lower 'block'
-    #for posx in enumerate(config['Button_Column']):
-        #for posy in enumerate(config['Button_Row']):
     for pos in enumerate(config['Button_Coordinates']):
-        indx = indx + 1
-        altbutton = tk.Button(
+        indx = indx + 1                                      # Advance index number
+        altbutton = tk.Button(                               # Define button properties
             root,
             text=str(indx),
             command=lambda idx=indx: on_button_click(idx),
@@ -207,41 +195,19 @@ def start():
             bg="gray",
             fg="black"
         )
-        #altbutton.place(x=config['Button_Column'][0], y=config['Button_Row'][0])
-        altbutton.place(x=int(pos[1][1]), y=int(pos[1][0]))
-        buttons.append(altbutton)
-
-    '''
-    # Upper 'block'
-    for posx in enumerate(config['Button_Column']):
-        for posy in enumerate(config['Button_Row']):
-            indx = indx + 1
-            altbutton = tk.Button(
-                root,
-                text=str(indx), #!don't forget to change +60 to however many nodes there are
-                command=lambda idx=indx: on_button_click(idx),
-                width=2,
-                height=1,
-                bg="gray",
-                fg="black"
-            )
-            altbutton.place(x=config['Button_Column'][0], y=config['Button_Row'][0])
-            #altbutton.place(x=config['Button_Column'][posx], y=config['Button_Row'][posy])
-            buttons.append(altbutton)
-    '''
-
-
+        altbutton.place(x=int(pos[1][1]), y=int(pos[1][0]))  # Place the button using pixel coordinates (from top left)
+        buttons.append(altbutton)                            # Add the new button to the list of existing buttons
 
     # Create a frame to hold buttons and listbox on the right side
-    frame = tk.Frame(root)
-    frame.pack(side=tk.RIGHT, fill=tk.Y)
+    ListFrame = tk.Frame(root)
+    ListFrame.pack(side=tk.RIGHT, fill=tk.Y)
 
-    # Create a listbox for selecting datasets
+    # Create a listbox and define properties
     listbox_bg_color = "#36454F"  # Charcoal gray
     listbox_fg_color = "#D3D3D3"  # Light gray
     listbox_font = ("Arial", 14)
     listbox = tk.Listbox(
-        frame,
+        ListFrame,
         height=5,
         font=listbox_font,
         bg=listbox_bg_color,
@@ -249,12 +215,8 @@ def start():
     )
     listbox.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-    # Populate the listbox with the names of the sets of values
-    for i in range(1, array_97x3.shape[2]):
-        listbox.insert(tk.END, f"Set {i}")
-
     # Create a scrollbar and attach it to the listbox
-    scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=listbox.yview)
+    scrollbar = ttk.Scrollbar(ListFrame, orient=tk.VERTICAL, command=listbox.yview)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
     listbox.config(yscrollcommand=scrollbar.set)
 
@@ -262,18 +224,18 @@ def start():
     listbox.bind("<<ListboxSelect>>", on_listbox_select)
 
     # Create a frame for the "close and reopen" and "exit" buttons
-    button_frame = tk.Frame(frame)
-    button_frame.pack(side=tk.BOTTOM, fill=tk.X)
+    ButtonFrame = tk.Frame(ListFrame)
+    ButtonFrame.pack(side=tk.BOTTOM, fill=tk.X)
 
     # Ask where to get spreadsheet from
-    inputtxtlabel = tk.Label(button_frame, text="Enter name of spreadsheet:", font="Arial, 12")
+    inputtxtlabel = tk.Label(ButtonFrame, text="Enter name of spreadsheet:", font="Arial, 12")
     inputtxtlabel.pack(fill=tk.X)
-    inputtxt = tk.Entry(button_frame, font="Arial, 12", bg="white")
+    inputtxt = tk.Entry(ButtonFrame, font="Arial, 12", bg="white")
     inputtxt.pack(fill=tk.X)
 
     # Create the "close and reopen" button and place it above the "exit" button
     reopen_button = tk.Button(
-        button_frame,
+        ButtonFrame,
         text="Reload Data",
         command=close_and_reopen,
         bg="blue",
@@ -283,7 +245,7 @@ def start():
 
     # Create the "exit" button and place it below the "close and reopen" button
     exit_button = tk.Button(
-        button_frame,
+        ButtonFrame,
         text="Exit",
         command=confirm_exit,
         bg="red",
@@ -295,14 +257,10 @@ def start():
     text_label = tk.Label(root, text="", font=("Arial", 14), bg="white")
     text_label.place(relx=0.80, rely=0.9, anchor="se")
 
-    update_button_colors()
-
     # Start the Tkinter event loop
     root.mainloop()
-
     print("Done")
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     start()
