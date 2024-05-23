@@ -1,10 +1,17 @@
 
+def linspace(a, b, n):
+    if n < 2:
+        return b
+    diff = (float(b) - a)/(n - 1)
+    return [diff * i + a for i in range(n)]
+
+
 def start():
     import openpyxl as xl
     import tkinter as tk
     from tkinter import messagebox, ttk
     from PIL import Image, ImageTk
-    import numpy as np
+    #import numpy as np
     import Modules.functions as func
     import os.path
     import tkinter.messagebox
@@ -24,6 +31,7 @@ def start():
     # Function to handle radio button selection
     global selected_option
     selected_option = 3
+
     def on_option_selected():
         global selected_option
         selected_option = radio_var.get()
@@ -62,7 +70,6 @@ def start():
     def confirm_exit():
         # Show a confirmation dialog asking if the user wants to quit
         # if messagebox.askyesno("Confirm Exit", "Are you sure you want to quit?"):
-            # root.quit()
         root.quit()
 
     def close_and_reopen():
@@ -73,14 +80,6 @@ def start():
         update_array_prime()    # Pull in new data
         update_button_colors()  # Update button colors
         root.deiconify()        # Update the buttons
-
-    def update_array_rand():
-        # Update the 97x3 array with random values (simulate from an outside source)
-        global DataArray
-        appArray = np.random.randint(0, 100, size=(97, 3, 1))
-        global HistArray
-        HistArray = np.dstack((DataArray, appArray))  # Keep a history of previous data
-        DataArray = appArray                               # Redefine array with new data
 
     def update_array_prime():
         # Update the 97x3 array with values from a spreadsheet
@@ -97,22 +96,64 @@ def start():
         maxRow = sheet.max_row
         print("Accessed workbook: ", SpSheet)
         root.title(SpSheet)
+
+        global coordLock
+        global HeaderData
+        global IdxHeaderDict
+
+        if coordLock == 0:  # Pull the headers from the relevant columns to use later
+            HeaderData = []
+            for value in sheet.iter_cols(min_col=25, max_col=maxCol, min_row=2, values_only=True):
+                HeaderData.append(value[0])
+
         if maxCol == 220:  # Make sure the row of data is complete
             RowData = []
             for value in sheet.iter_cols(min_col=25, max_col=maxCol, min_row=maxRow, values_only=True):
                 RowData.append(value[0])
+
             AirVel = RowData[:23]         # 23 air velocity sensors
-            while len(AirVel) < 89:
-                AirVel.append("None")
-            TemVal = RowData[23:(23+89)]  # 89 temperature sensors
-            while len(TemVal) < 89:
-                TemVal.append("None")
-            GasVal = RowData[(23+89):]    # 84 gas sensors
-            while len(GasVal) < 89:
-                GasVal.append("None")
-            wb.close()
+            AirVel = tuple(zip(AirVel, config["Airspeed_Sensor_Coordinates"]))
+            #AirVel = list(AirVel)
+            #while len(AirVel) < 90:
+            #    AirVel.append(("None", ""))
+            #AirVel = tuple(AirVel)
+
+            TemVal = RowData[23:(23+90)]  # 89 temperature sensors
+            TemVal = tuple(zip(TemVal, config["Temperature_Sensor_Coordinates"]))
+            #TemVal = list(TemVal)
+            #while len(TemVal) < 90:
+            #    TemVal.append(("None", ""))
+            #TemVal = tuple(TemVal)
+
+            GasVal = RowData[(23+90):]    # 84 gas sensors
+            GasVal = tuple(zip(GasVal, config["Gas_Sensor_Coordinates"]))
+            #GasVal = list(GasVal)
+            #while len(GasVal) < 90:
+            #    GasVal.append(("None", ""))
+            #GasVal = tuple(GasVal)
+
+            wb.close()  # Don't keep the spreadsheet open when it's not needed
+
+            # Create a dictionary to hold the combined data
+            combined_dict = {}
+
+            # Function to populate the dictionary with data
+            def populate_dict(data_list, index):
+                for data, coord in data_list:
+                    if coord not in combined_dict:
+                        combined_dict[coord] = [None, None, None, coord]
+                    combined_dict[coord][index] = data
+
+            # Populate the dictionary from each list
+            populate_dict(AirVel, 0)
+            populate_dict(TemVal, 1)
+            populate_dict(GasVal, 2)
+
+            # Convert the dictionary to a list of tuples
+            appArray = [tuple(values) for values in combined_dict.values()]
+
             global DataArray
-            appArray = list(zip(AirVel, TemVal, GasVal))
+            #appArray = list(zip(AirVel, TemVal, GasVal))
 
             # Keep a history of previous data
             global HistArray
@@ -125,13 +166,22 @@ def start():
                     HistArray.append(appArray)
             except NameError:
                 HistArray = appArray     # If this is the first iteration, nothing to extend on
-            DataArray = appArray
+            DataArray = appArray         # Save the new data to the DataArray
+
+            # Splice the coordinates of each sensor into the DataArray
+            #DataArray = [(tup[0], tup[1], tup[2], tup2[1]) for tup, tup2 in zip(DataArray, Coordinate_Transform)]
+
+            # Rearrange the DataArray so that the datapoints are in the correct order relative to the button indexes
+            DataDict = {coordinate: (data1, data2, data3, coordinate) for data1, data2, data3, coordinate in DataArray}
+            DataArray = [DataDict[coordinate] for _, coordinate in Coordinate_Transform]
+            DataArray = DataArray
+
         else:
             wb.close()
             tkinter.messagebox.showerror(title="Error", message="Spreadsheet row contains invalid data")
 
     def value_to_color(value):
-        if value == "None":
+        if value is None or value == "None":
             return "gray"
         elif value < 20:
             return "red"
@@ -175,17 +225,26 @@ def start():
 
     # Initialize an empty array so the program doesn't error out when first starting
     global DataArray
-    DataArray = np.zeros(shape=(90, 3, 1))
+    DataArray = []
+
+    # Set up the key to translate between node index and coordinate
+    Coordinate_Transform = []
+    counter = 1
+    for item in config['Button_Coordinates']:
+        Coordinate_Transform.append([counter, item[2]])
+        counter += 1
+    del counter
 
     # Set up data storage
     global arrLock
-    arrLock = 0  # Used to kickstart the HistArray data storage
+    global coordLock
+    arrLock = 0      # Used to kickstart the HistArray data storage
+    coordLock = 0    # Used to figure out what order
 
     # Place all the buttons on the image
     buttons = []
     indx = 0
     for pos in enumerate(config['Button_Coordinates']):
-        indx = indx + 1                                      # Advance index number
         altbutton = tk.Button(                               # Define button properties
             root,
             text=str(indx),
@@ -197,6 +256,7 @@ def start():
         )
         altbutton.place(x=int(pos[1][1]), y=int(pos[1][0]))  # Place the button using pixel coordinates (from top left)
         buttons.append(altbutton)                            # Add the new button to the list of existing buttons
+        indx += 1
 
     # Create a frame to hold buttons and listbox on the right side
     ListFrame = tk.Frame(root)
