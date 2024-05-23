@@ -2,6 +2,11 @@
 ## Overview
 The latest iteration of this project, V4, has many differences from the V3 release. In order to accommodate over 200 sensors at 97 nodes, the task of collecting data is split between 3 Arduino Mega 2560 microcontrollers, an Arduino Nano microcontroller, and an Intel NUC computer. To enable communication between the devices, they are connected to a CAN ([Controller Area Network](en.wikipedia.org/wiki/CAN_bus)) bus. After collecting data from all of the sensors, the V4 Python program running on the Intel NUC sorts it into a spreadsheet. From there, the [Mine_Evacuation.py](https://github.com/sgoodyear/Arduino-Python_sensor_datalink/blob/master/Mine_Evacuation.py) program reads the spreadsheet and generates the optimal escape route. A new program, [V1_Visualizer.py](https://github.com/U60NMTMiner/Arduino-Python_sensor_datalink/blob/KorCleanup/V1_Visualizer.py), shows a color-coded map of the data extracted from the Simulation Rig.
 
+## config.json
+This configuration file has data that is used by both the V4 Serial Reader program and the new V1 Visualzer program use to run. Its main purpose is to hold huge lists of coordinates without cluttering the main programs.
+
+The V4 Serial Reader program uses the Airspeed_..., Gas_..., and Temperature_Sensor_Coordinates to build the output data spreadsheet, and the Working_Directory and Serial_Port to configure the program on startup. The V1 Visualizer program mainly usese the Button_Coordinates to place the buttons in the user interface and relate the buttons' pixel coordinates to the sensors' physical coordinates.
+
 ## Arduino Load Splitting
 With so many sensors, a single Arduino Mega does not have the available pins, memory, or processing power to collect data from all of them. Therefore, 3 Arduino Megas are being used to collect data from each of the 3 types of sensors. One Arduino is responsible for collecting data from all 23 of the air velocity sensors, one collects data from all the MQ-2 gas sensors, and one collects data from all of the AHT20 temperature sensors. Even in this arrangement, the Arduino Mega does not have enough pins to connect to all of the sensors directly. To solve this issue, each Arduino is connected to an array of multipliexers that allow one analog pin (or 1 i2c bus) to collect data from over 100 sensors.
 
