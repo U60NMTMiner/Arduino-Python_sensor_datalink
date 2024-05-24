@@ -238,7 +238,7 @@ def readData(serialConnection, sessionData, refinedData):
             # datasheet = mainWB["Data"]
             print("Spreadsheet updated.")
 
-            keepConstantTiming(last_time, 10)
+            keepConstantTiming(last_time, 5)
 
             last_time = current_time
             print()
