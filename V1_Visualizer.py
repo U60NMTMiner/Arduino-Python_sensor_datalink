@@ -151,7 +151,6 @@ def start():
             appArray = [tuple(values) for values in combined_dict.values()]
 
             global DataArray
-            #appArray = list(zip(AirVel, TemVal, GasVal))
 
             # Keep a history of previous data
             global HistArray
@@ -193,14 +192,14 @@ def start():
             case 2:  # Temperature
                 if value is None or value == "None":
                     return "gray"
-                elif value < 22:
-                    # Less than room temperature
+                elif value < 26.6667:
+                    # Comfortable room temperature  < 80F
                     return "spring green"
-                elif value < 25:
-                    # Room temperature to OSHA "Caution" temperature
+                elif value < 32.2222:
+                    # OSHA "Caution" temperature  < 90F
                     return "yellow"
-                elif value < 35:
-                    # OSHA "Caution" to "Danger" temperature
+                elif value < 39.4444:
+                    # OSHA "Danger" temperature  < 103F
                     return "orange"
                 else:
                     # OSHA "Danger" and above temperatures
