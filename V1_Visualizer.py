@@ -11,11 +11,9 @@ def start():
     import tkinter as tk
     from tkinter import messagebox, ttk
     from PIL import Image, ImageTk
-    #import numpy as np
     import Modules.functions as func
     import os.path
     import tkinter.messagebox
-    import time
 
     # Pull in the config file
     config = func.open_file("config")
@@ -48,7 +46,7 @@ def start():
                 value = DataArray[index][2]  # On first start, no option has yet been registered
 
             # Map the average value to a color using `value_to_color`
-            color = value_to_color(value)
+            color = value_to_color(value, selected_option)
 
             # Set the background color of the button based on the color
             button.config(bg=color)
@@ -180,15 +178,48 @@ def start():
             wb.close()
             tkinter.messagebox.showerror(title="Error", message="Spreadsheet row contains invalid data")
 
-    def value_to_color(value):
-        if value is None or value == "None":
-            return "gray"
-        elif value < 20:
-            return "red"
-        elif value < 50:
-            return "yellow"
-        else:
-            return "green"
+    def value_to_color(value, sens_type):
+        match sens_type:
+            case 1:  # Airspeed
+                if value is None or value == "None":
+                    return "gray"
+                elif value < 1:
+                    return "deep sky blue"
+                elif value < 10:
+                    return "blue"
+                else:
+                    return "purple"
+
+            case 2:  # Temperature
+                if value is None or value == "None":
+                    return "gray"
+                elif value < 22:
+                    # Less than room temperature
+                    return "spring green"
+                elif value < 25:
+                    # Room temperature to OSHA "Caution" temperature
+                    return "yellow"
+                elif value < 35:
+                    # OSHA "Caution" to "Danger" temperature
+                    return "orange"
+                else:
+                    # OSHA "Danger" and above temperatures
+                    return "red"
+
+            case 3:  # Gas
+                if value is None or value == "None":
+                    return "gray"
+                elif value < 9:
+                    # Safe 8-hour CO exposure
+                    return "green"
+                elif value < 25:
+                    # Safe 24-hour CO exposure
+                    return "yellow"
+                else:
+                    return "red"
+
+            case _:
+                raise IndexError("Sensor type not recognized.")
 
     ####################################################################################################
     ###  First-run setup  ###
@@ -247,7 +278,7 @@ def start():
     for pos in enumerate(config['Button_Coordinates']):
         altbutton = tk.Button(                               # Define button properties
             root,
-            text=str(indx),
+            text=str(indx + 1),
             command=lambda idx=indx: on_button_click(idx),
             width=2,
             height=1,
