@@ -91,24 +91,24 @@ void loop() {
       for(int i = 0; i <= 15; i ++){
         muxA3.channel(i);
         smkN = constrain(analogRead(A2), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 14] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxB1.channel(i);
         smkN = constrain(analogRead(A3), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 14 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 16] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxB2.channel(i);
         smkN = constrain(analogRead(A4), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 14 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 16 + 16] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 2; i ++){
         muxB3.channel(i);
         smkN = constrain(analogRead(A5), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 14 + 15 + 15 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 16 + 16 + 16] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
-      //At this point, 75 of 84 sensors have been read
+      //At this point, 80 of 89 sensors have been read
 
       smkN = constrain(analogRead(A6), 250, 1000);
       smks[1 + 75] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
