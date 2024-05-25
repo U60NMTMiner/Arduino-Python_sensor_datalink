@@ -162,7 +162,7 @@ def readData(serialConnection, sessionData, refinedData):
 
         # Check if Smoke data
         elif SplitData[0] == 83 and len(
-                SplitData) == 425:  # Check for DEC "S" for smoke data and make sure all of it is there
+                SplitData) == 425+25:  # Check for DEC "S" for smoke data and make sure all of it is there
             cleanSData = [item for index, item in enumerate(SplitData) if
                           (index + 1) % 5 != 1]  # Clean out the sensor type identifiers
             cleanSData = cleanSData[:-4]  # Remove the last of the 5-character terminator symbol
@@ -184,7 +184,10 @@ def readData(serialConnection, sessionData, refinedData):
                     cleanTData[i:i + 4])  # Convert the data from binary to integers, in blocks of 4 bytes
                 refinedTData.append(
                     convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
-            #refinedData['t'].append(refinedTData)
+
+            # Temporary Fix: IDK why there are 3 too many temperature datapoints for the number of sensors
+            refinedTData = refinedTData[:-3]
+
             print(f"RefinedTData {refinedTData}\n\nRefinedData[t] {refinedData['t']}")
 
         else:
