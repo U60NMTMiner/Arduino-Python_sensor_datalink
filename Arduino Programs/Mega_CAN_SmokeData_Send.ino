@@ -91,51 +91,52 @@ void loop() {
       for(int i = 0; i <= 15; i ++){
         muxA3.channel(i);
         smkN = constrain(analogRead(A2), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 15] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 1] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxB1.channel(i);
         smkN = constrain(analogRead(A3), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 15 + 16] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 16 + 1] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 15; i ++){
         muxB2.channel(i);
         smkN = constrain(analogRead(A4), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 15 + 16 + 16] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 16 + 16 + 1] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
       for(int i = 0; i <= 2; i ++){
         muxB3.channel(i);
         smkN = constrain(analogRead(A5), 250, 1000);                     // Take reading from common analog pin
-        smks[i + 13 + 15 + 16 + 16 + 16] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
+        smks[i + 13 + 15 + 16 + 16 + 16 + 1] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);   // Convert readings to approximate PPMs
       }
-      //At this point, 80 of 89 sensors have been read
+      //At this point, 80 of 89 sensors have been read (but the index starts at 0)
+      int read = 79;
 
       smkN = constrain(analogRead(A6), 250, 1000);
-      smks[1 + 75] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[1 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
 
       smkN = constrain(analogRead(A7), 250, 1000);
-      smks[1 + 76] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[2 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
 
       smkN = constrain(analogRead(A8), 250, 1000);
-      smks[1 + 77] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[3 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
       
       smkN = constrain(analogRead(A9), 250, 1000);
-      smks[1 + 78] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[4 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
       
       smkN = constrain(analogRead(A10), 250, 1000);
-      smks[1 + 79] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[5 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
       
       smkN = constrain(analogRead(A11), 250, 1000);
-      smks[1 + 80] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[6 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
       
       smkN = constrain(analogRead(A12), 250, 1000);
-      smks[1 + 81] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[7 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
       
       smkN = constrain(analogRead(A13), 250, 1000);
-      smks[1 + 82] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[8 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
 
       smkN = constrain(analogRead(A14), 250, 1000);
-      smks[1 + 83] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
+      smks[9 + read] = constrain(map(smkN, 250, 1000, 0, 15000), 0, 15000);
     }
     
     // Wait for the airspeed's end of data before broadcasting
