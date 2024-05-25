@@ -186,7 +186,7 @@ def readData(serialConnection, sessionData, refinedData):
                     convertedChunk / 10000)  # Convert integer to float using the opposite operation as the Arduino Mega made
 
             # Temporary Fix: IDK why there are 3 too many temperature datapoints for the number of sensors
-            refinedTData = refinedTData[:-3]
+            refinedData['t'] = refinedData['t'][:-3]
 
             print(f"RefinedTData {refinedTData}\n\nRefinedData[t] {refinedData['t']}")
 
