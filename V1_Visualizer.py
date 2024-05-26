@@ -189,12 +189,20 @@ def start():
                     return "gray"
                 elif value < 9:
                     # Safe 8-hour CO exposure
-                    return "green"
+                    return "spring green2"
                 elif value < 25:
                     # Safe 24-hour CO exposure
-                    return "yellow"
+                    return "yellow green"
+                elif value < 500:
+                    return "gold"
+                elif value < 1000:
+                    return "orange2"
+                elif value < 2000:
+                    return "dark orange"
+                elif value < 3000:
+                    return "firebrick1"
                 else:
-                    return "red"
+                    return "firebrick4"
 
             case _:
                 raise IndexError("Sensor type not recognized.")
