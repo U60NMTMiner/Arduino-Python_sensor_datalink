@@ -1,10 +1,4 @@
 
-def linspace(a, b, n):
-    if n < 2:
-        return b
-    diff = (float(b) - a)/(n - 1)
-    return [diff * i + a for i in range(n)]
-
 
 def start():
     import openpyxl as xl
@@ -90,7 +84,7 @@ def start():
             return                      # Don't load a spreadsheet that doesn't exist
         wb = xl.load_workbook(SpSheet)  # If the spreadsheet is valid, load spreadsheet
         sheet = wb["Data"]
-        maxCol = sheet.max_column - 2   # For some reason, there are two unassigned coordinates hanging off the end
+        maxCol = sheet.max_column   # For some reason, there are two unassigned coordinates hanging off the end
         maxRow = sheet.max_row
         print("Accessed workbook: ", SpSheet)
         root.title(SpSheet)
@@ -104,31 +98,19 @@ def start():
             for value in sheet.iter_cols(min_col=25, max_col=maxCol, min_row=2, values_only=True):
                 HeaderData.append(value[0])
 
-        if maxCol == 220:  # Make sure the row of data is complete
+        if maxCol == 220 or 1 == 1:  # Make sure the row of data is complete
             RowData = []
             for value in sheet.iter_cols(min_col=25, max_col=maxCol, min_row=maxRow, values_only=True):
                 RowData.append(value[0])
 
             AirVel = RowData[:23]         # 23 air velocity sensors
             AirVel = tuple(zip(AirVel, config["Airspeed_Sensor_Coordinates"]))
-            #AirVel = list(AirVel)
-            #while len(AirVel) < 90:
-            #    AirVel.append(("None", ""))
-            #AirVel = tuple(AirVel)
 
-            TemVal = RowData[23:(23+90)]  # 89 temperature sensors
+            TemVal = RowData[23:(23+86)]  # 86 temperature sensors
             TemVal = tuple(zip(TemVal, config["Temperature_Sensor_Coordinates"]))
-            #TemVal = list(TemVal)
-            #while len(TemVal) < 90:
-            #    TemVal.append(("None", ""))
-            #TemVal = tuple(TemVal)
 
-            GasVal = RowData[(23+90):]    # 84 gas sensors
+            GasVal = RowData[(23+86):]    # 89 gas sensors
             GasVal = tuple(zip(GasVal, config["Gas_Sensor_Coordinates"]))
-            #GasVal = list(GasVal)
-            #while len(GasVal) < 90:
-            #    GasVal.append(("None", ""))
-            #GasVal = tuple(GasVal)
 
             wb.close()  # Don't keep the spreadsheet open when it's not needed
 
@@ -164,9 +146,6 @@ def start():
             except NameError:
                 HistArray = appArray     # If this is the first iteration, nothing to extend on
             DataArray = appArray         # Save the new data to the DataArray
-
-            # Splice the coordinates of each sensor into the DataArray
-            #DataArray = [(tup[0], tup[1], tup[2], tup2[1]) for tup, tup2 in zip(DataArray, Coordinate_Transform)]
 
             # Rearrange the DataArray so that the datapoints are in the correct order relative to the button indexes
             DataDict = {coordinate: (data1, data2, data3, coordinate) for data1, data2, data3, coordinate in DataArray}
