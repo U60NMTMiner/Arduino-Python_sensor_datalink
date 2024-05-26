@@ -8,6 +8,8 @@ def start():
     import Modules.functions as func
     import os.path
     import tkinter.messagebox
+    import time
+    import threading
 
     # Pull in the config file
     config = func.open_file("config")
@@ -30,6 +32,28 @@ def start():
         update_button_colors()
         root.deiconify()
         # print(f"Selected option: {selected_option}")
+
+
+    def on_button_toggle():
+        global wrapper
+        if AutoRefresh.get() == 1:
+            print("Automatic refresh enabled")
+            close_and_reopen()
+            def wrapper():
+                while not stop_event.is_set():
+                    close_and_reopen()
+                    time.sleep(2.5)
+        elif AutoRefresh.get() == 0:
+            print("Automatic refresh disabled")
+            stop_event.set()
+            checkbutton.config(state=tk.DISABLED)
+
+        # Multithreading for auto-refresh
+        thread = threading.Thread(target=wrapper)
+        thread.daemon = True
+        thread.start()
+        return thread
+
 
     def update_button_colors():
         # Update the colors of all buttons based on their corresponding values from `array_97x3`
@@ -188,10 +212,10 @@ def start():
                 if value is None or value == "None":
                     return "gray"
                 elif value < 9:
-                    # Safe 8-hour CO exposure
+                    # Safe 8-hour CO exposure ppm
                     return "spring green2"
                 elif value < 25:
-                    # Safe 24-hour CO exposure
+                    # Safe 24-hour CO exposure ppm
                     return "yellow green"
                 elif value < 500:
                     return "gold"
@@ -224,12 +248,18 @@ def start():
     radio_frame.pack(side="bottom")
 
     # Create three radio buttons
-    radio1 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Air Velocity (m/s)", variable=radio_var, value=1, command=on_option_selected)
+    radio1 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Air Velocity (m/s)", variable=radio_var, value=1, command=on_option_selected, relief="raised")
     radio1.pack(side="left", padx=5, pady=1)
-    radio2 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Temperature (deg C)", variable=radio_var, value=2, command=on_option_selected)
+    radio2 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Temperature (deg C)", variable=radio_var, value=2, command=on_option_selected, relief="raised")
     radio2.pack(side="left", padx=5, pady=1)
-    radio3 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Gas Concentration (approx. ppm)", variable=radio_var, value=3, command=on_option_selected)
+    radio3 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Gas Concentration (approx. ppm)", variable=radio_var, value=3, command=on_option_selected, relief="raised")
     radio3.pack(side="left", padx=5, pady=1)
+
+    # Create checkbutton
+    AutoRefresh = tk.IntVar()
+    checkbutton = tk.Checkbutton(radio_frame, bg="NavajoWhite2", font="14", text="Automatic Refresh", variable=AutoRefresh, onvalue=1, offvalue=0, command=on_button_toggle, relief="raised")
+    checkbutton.pack(side="right", padx=75, pady=1)
+    stop_event = threading.Event()
 
     # Load the image using PIL (Pillow) and convert it to a PhotoImage object
     image_path = "Sensor_layout.png"  # Use the reference image path
