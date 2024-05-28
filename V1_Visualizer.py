@@ -42,7 +42,7 @@ def start():
             def wrapper():
                 while not stop_event.is_set():
                     close_and_reopen()
-                    time.sleep(2.5)
+                    time.sleep(4)
         elif AutoRefresh.get() == 0:
             print("Automatic refresh disabled")
             stop_event.set()
