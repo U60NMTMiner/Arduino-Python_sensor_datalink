@@ -300,7 +300,7 @@ def main():
         #     print(f"Spreadsheet was already saved: \033[32m{cwd}/{filename}\033[0m")
 
         time.sleep(0.25)
-        final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet:")
+        final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet: ")
         if final == "del":
             os.remove(f'{cwd}/{filename}')
             print("File deleted.")
