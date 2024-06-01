@@ -10,9 +10,14 @@ def start():
     import tkinter.messagebox
     import time
     import threading
+    import subprocess
+    import json
 
     # Pull in the config file
     config = func.open_file("config")
+
+    # Path to Hassan's pathfinding program
+    pathfinder = "simulation_rig_visualization_path_planning.py"
 
     def on_button_click(index):
         # Retrieve the corresponding row from the 97x3 array using the button's index
@@ -54,6 +59,14 @@ def start():
         thread.start()
         return thread
 
+    def on_history_toggle():
+        global NoWinHist
+        if KeepWindowHistory.get() == 1:
+            print("window history on")
+            NoWinHist = 0
+        elif KeepWindowHistory.get() == 0:
+            print("window history off")
+            NoWinHist = 1
 
     def update_button_colors():
         # Update the colors of all buttons based on their corresponding values from `array_97x3`
@@ -93,9 +106,10 @@ def start():
         text_label.config(text=str(""))
 
         # Update the data array from an outside source
-        update_array_prime()    # Pull in new data
-        update_button_colors()  # Update button colors
-        root.deiconify()        # Update the buttons
+        update_array_prime()         # Pull in new data
+        update_button_colors()       # Update button colors
+        generate_escape(pathfinder)  # Run the program to generate new escape route (SLOW)
+        root.deiconify()             # Update the buttons
 
     def update_array_prime():
         # Update the 97x3 array with values from a spreadsheet
@@ -106,6 +120,14 @@ def start():
                                                  "\n\rUse .xlsx files only")
             inputtxt.delete(0, 'end')   # Clear text entry
             return                      # Don't load a spreadsheet that doesn't exist
+
+        # Set the spreadsheet as the currently active one in config.json
+        with open('config.json', 'r') as file:
+            data = json.load(file)
+        data['Current_Spreadsheet'] = SpSheet
+        with open('config.json', 'w') as file:
+            json.dump(data, file, indent=4)
+
         wb = xl.load_workbook(SpSheet)  # If the spreadsheet is valid, load spreadsheet
         sheet = wb["Data"]
         maxCol = sheet.max_column   # For some reason, there are two unassigned coordinates hanging off the end
@@ -231,6 +253,43 @@ def start():
             case _:
                 raise IndexError("Sensor type not recognized.")
 
+    def generate_escape(path):
+        print("Running simulation_rig_visualization_path_planning.py...")
+        subprocess.run(
+            ["python", path],
+            capture_output=False,
+            text=True,
+            check=True
+        )
+
+        global NoWinHist
+        if NoWinHist == 0:
+            for widget in root.winfo_children():
+                if isinstance(widget, tk.Toplevel):
+                    widget.destroy()
+
+        new_window = tk.Toplevel(root)
+        new_window.title("Exit Path")
+        new_window.attributes('-topmost', True)
+        exit_img = Image.open("simulation_data_and_path_escape.png")
+        width, height = exit_img.size
+        aspect_ratio = width/height
+        new_width = 800
+        new_height = int(new_width / aspect_ratio)
+        exit_img = exit_img.resize((new_width, new_height), Image.LANCZOS)
+
+        left = (new_width - 600) // 2
+        top = (new_height - (new_height-300)) // 2
+        right = left + 600 - 100
+        bottom = top + (new_height-300)
+
+        exit_img = exit_img.crop((left, top, right, bottom))
+        exit_img = ImageTk.PhotoImage(exit_img)
+
+        exit_img_label = tk.Label(new_window, image=exit_img)
+        exit_img_label.image = exit_img
+        exit_img_label.pack()
+
     ####################################################################################################
     ###  First-run setup  ###
 
@@ -255,11 +314,17 @@ def start():
     radio3 = tk.Radiobutton(radio_frame, bg="gray", font="14", text="Gas Concentration (approx. ppm)", variable=radio_var, value=3, command=on_option_selected, relief="raised")
     radio3.pack(side="left", padx=5, pady=1)
 
-    # Create checkbutton
+    # Create checkbuttons
     AutoRefresh = tk.IntVar()
     checkbutton = tk.Checkbutton(radio_frame, bg="NavajoWhite2", font="14", text="Automatic Refresh", variable=AutoRefresh, onvalue=1, offvalue=0, command=on_button_toggle, relief="raised")
-    checkbutton.pack(side="right", padx=75, pady=1)
+    checkbutton.pack(side="right", padx=70, pady=1)
     stop_event = threading.Event()
+
+    global NoWinHist
+    NoWinHist = 1
+    KeepWindowHistory = tk.IntVar()
+    checkbutton2 = tk.Checkbutton(radio_frame, bg="NavajoWhite1", font="14", text="Route History", variable=KeepWindowHistory, onvalue=0, offvalue=1, command=on_history_toggle, relief="raised")
+    checkbutton2.pack(side="right", padx=5, pady=1)
 
     # Load the image using PIL (Pillow) and convert it to a PhotoImage object
     image_path = "Sensor_layout.png"  # Use the reference image path
