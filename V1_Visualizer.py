@@ -128,12 +128,17 @@ def start():
         with open('config.json', 'w') as file:
             json.dump(data, file, indent=4)
 
-        wb = xl.load_workbook(SpSheet)  # If the spreadsheet is valid, load spreadsheet
-        sheet = wb["Data"]
-        maxCol = sheet.max_column   # For some reason, there are two unassigned coordinates hanging off the end
-        maxRow = sheet.max_row
-        print("Accessed workbook: ", SpSheet)
-        root.title(SpSheet)
+        try:
+            wb = xl.load_workbook(SpSheet)  # If the spreadsheet is valid, load spreadsheet
+            sheet = wb["Data"]
+            maxCol = sheet.max_column
+            maxRow = sheet.max_row
+            print("Accessed workbook: ", SpSheet)
+            root.title(SpSheet)
+        except:
+            print("Error loading workbook, retrying...")
+            time.sleep(5)
+            update_array_prime()
 
         global coordLock
         global HeaderData
@@ -255,12 +260,16 @@ def start():
 
     def generate_escape(path):
         print("Running simulation_rig_visualization_path_planning.py...")
-        subprocess.run(
-            ["python", path],
-            capture_output=False,
-            text=True,
-            check=True
-        )
+        try:
+            subprocess.run(
+                ["python", path],
+                capture_output=False,
+                text=True,
+                check=True
+            )
+        except:
+            print("Path planner failed")
+
 
         global NoWinHist
         if NoWinHist == 0:

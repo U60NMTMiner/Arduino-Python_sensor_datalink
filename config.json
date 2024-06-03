@@ -2,8 +2,8 @@
     "Working_Directory": "",
     "Serial_Port": "COM3",
     "Serial_Port_Linux": "/dev/ttyUSB0",
-    "Current_Spreadsheet": "2024-05-25_16-15_data.xlsx",
-    "Start_Node": "78",
+    "Current_Spreadsheet": "2024-06-03_15-24_data.xlsx",
+    "Start_Node": "45",
     "End_Node": "5",
     "Airspeed_Sensor_Coordinates": [
         "10-01",
