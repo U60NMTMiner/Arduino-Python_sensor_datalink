@@ -441,6 +441,7 @@ def start():
     # Start the Tkinter event loop
     root.mainloop()
     print("Done")
+    exit(0)
 
 
 if __name__ == '__main__':
