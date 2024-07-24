@@ -37,7 +37,7 @@ void setup() {
 
   // After startup, send a "ping" signal to figure out which other Arduinos are on the network
   Serial.println(F("Giving Arduinos time to boot up..."));
-  delay(5500);                           // First wait for all Arduinos to complete startup tests
+  delay(5000);                           // First wait for all Arduinos to complete startup tests
   mcp.sendMessage(&canControl);           // Then send message
   delay(10);
   Serial.println(F("Pinging CAN network..."));
@@ -61,7 +61,13 @@ void setup() {
   Serial.println(F(" of 3 Arduinos"));
   delay(100);
 
-  Serial.println(F("Nano Pass-Through ready"));   // Announce startup complete
+  if(pingCount == 3){
+    Serial.println(F("Nano Pass-Through ready"));   // Announce startup complete
+  }
+  else{
+    Serial.println(F("Not all Arduinos are connected, try reseting the system"));
+  }
+
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);                         // Turn on built-in LED
   delay(100);
