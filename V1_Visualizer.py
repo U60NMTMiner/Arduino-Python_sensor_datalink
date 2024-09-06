@@ -285,7 +285,7 @@ def start():
         aspect_ratio = width/height
         new_width = 800
         new_height = int(new_width / aspect_ratio)
-        exit_img = exit_img.resize((new_width, new_height), Image.LANCZOS)
+        exit_img = exit_img.resize((new_width, new_height))
 
         left = (new_width - 600) // 2
         top = (new_height - (new_height-300)) // 2

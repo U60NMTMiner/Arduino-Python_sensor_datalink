@@ -3,7 +3,7 @@ import time
 import serial
 import sys
 import select
-import os
+#import os
 import openpyxl as xl
 import Modules.functions as func
 
@@ -70,10 +70,15 @@ def waitUntilReady(serial_connection):
     """
     while True:
         # For the 'mirroring' before actual data is coming in, use built-in decoding
-        intro = serial_connection.readline().decode().strip()
-        print(intro)
-        if intro == "Nano Pass-Through ready":
-            break
+        try:
+            intro = serial_connection.readline().decode().strip()
+            print(intro)
+            if intro == "Nano Pass-Through ready":
+                break
+            elif intro == "Not all Arduinos are connected, try resetting the system":
+                exit("Arduino connection error")
+        except UnicodeDecodeError:
+            exit("utf-8 encoding error, try resetting the system")
 
 
 def getCurrentTime() -> float:
@@ -300,12 +305,12 @@ def main():
         #     print(f"Spreadsheet was already saved: \033[32m{cwd}/{filename}\033[0m")
 
         time.sleep(0.25)
-        final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet: ")
-        if final == "del":
-            os.remove(f'{cwd}/{filename}')
-            print("File deleted.")
-        else:
-            print("Exiting program.")
+        #final = input("Enter anything to exit program, or print 'del' to delete the spreadsheet: ")
+        #if final == "del":
+        #    os.remove(f'{cwd}/{filename}')
+        #    print("File deleted.")
+        #else:
+        #    print("Exiting program.")
 
     sys.exit(0)  # Show "success" exit code
 

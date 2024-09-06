@@ -65,7 +65,7 @@ void setup() {
     Serial.println(F("Nano Pass-Through ready"));   // Announce startup complete
   }
   else{
-    Serial.println(F("Not all Arduinos are connected, try reseting the system"));
+    Serial.println(F("Not all Arduinos are connected, try resetting the system"));
   }
 
   pinMode(13, OUTPUT);
